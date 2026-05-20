@@ -1,5 +1,7 @@
 from django.shortcuts import render
-from .models import Task, Worker, Position, TaskType
+from django.views import generic
+
+from .models import Position, Task, TaskType, Worker
 
 
 def index(request):
@@ -10,15 +12,19 @@ def index(request):
     num_workers = Worker.objects.count()
     num_positions = Position.objects.count()
 
-    num_visits = request.session.get("num_visits", 0)
-    request.session["num_visits"] = num_visits + 1
-
     context = {
         "num_tasks": num_tasks,
         "num_critical_tasks": num_critical_tasks,
         "num_workers": num_workers,
         "num_positions": num_positions,
-        "num_visits": num_visits,
     }
 
     return render(request, "manager/index.html", context=context)
+
+
+class TaskListView(generic.ListView):
+    model = Task
+    context_object_name = "task_list"
+    template_name = "manager/task_list.html"
+
+    queryset = Task.objects.order_by("is_completed", "deadline")

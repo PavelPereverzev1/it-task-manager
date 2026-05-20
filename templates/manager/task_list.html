@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Tasks - IT Task Manager{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-list-task me-2"></i> Task List</h1>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+          <tr>
+            <th>Task Name</th>
+            <th>Deadline</th>
+            <th>Status</th>
+            <th>Priority</th>
+            <th>Type</th>
+          </tr>
+          </thead>
+          <tbody>
+          {% for task in task_list %}
+            <tr>
+              <td>
+                <strong>{{ task.name }}</strong>
+                {% if task.description %}
+                  <br><small class="text-muted">{{ task.description|truncatechars:60 }}</small>
+                {% endif %}
+              </td>
+              <td>{{ task.deadline|date:"M d, Y" }}</td>
+              <td>
+                {% if task.is_completed %}
+                  <span class="badge bg-success-subtle text-success border border-success">Completed</span>
+                {% else %}
+                  <span class="badge bg-warning-subtle text-warning border border-warning">In Progress</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if task.priority == 'critical' %}
+                  <span class="text-danger font-weight-bold"><i class="bi bi-fire"></i> Critical</span>
+                {% elif task.priority == 'high' %}
+                  <span class="text-warning"><i class="bi bi-arrow-up-circle"></i> High</span>
+                {% elif task.priority == 'medium' %}
+                  <span class="text-primary"><i class="bi bi-dash-circle"></i> Medium</span>
+                {% else %}
+                  <span class="text-muted"><i class="bi bi-arrow-down-circle"></i> Low</span>
+                {% endif %}
+              </td>
+              <td>
+                <span class="badge bg-secondary">{{ task.task_type.name }}</span>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5" class="text-center py-4 text-muted">
+                <i class="bi bi-folder-x fs-1 d-block mb-2"></i>
+                No tasks found. Create one in the admin panel!
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}
