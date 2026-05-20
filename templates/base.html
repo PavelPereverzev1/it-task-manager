@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}IT Task Manager{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css">
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+  <style>
+      body {
+          overflow-x: hidden;
+          background-color: #f8f9fa;
+      }
+
+      .sidebar {
+          min-height: 100vh;
+          background-color: #212529;
+      }
+
+      .sidebar .nav-link {
+          color: #adb5bd;
+      }
+
+      .sidebar .nav-link:hover, .sidebar .nav-link.active {
+          color: #fff;
+          background-color: #343a40;
+      }
+  </style>
+</head>
+<body>
+
+<div class="container-fluid">
+  <div class="row">
+    <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse p-3">
+      <a href="{% url 'manager:index' %}"
+         class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+        <i class="bi bi-cpu-fill me-2 fs-4"></i>
+        <span class="fs-4">IT Manager</span>
+      </a>
+      <hr class="text-secondary">
+      <ul class="nav nav-pills flex-column mb-auto">
+        <li class="nav-item">
+          <a href="{% url 'manager:index' %}"
+             class="nav-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}">
+            <i class="bi bi-speedometer2 me-2"></i> Dashboard
+          </a>
+        </li>
+        <li>
+          <a href="#" class="nav-link">
+            <i class="bi bi-list-task me-2"></i> Tasks
+          </a>
+        </li>
+        <li>
+          <a href="#" class="nav-link">
+            <i class="bi bi-people me-2"></i> Workers
+          </a>
+        </li>
+        <li>
+          <a href="#" class="nav-link">
+            <i class="bi bi-briefcase me-2"></i> Positions
+          </a>
+        </li>
+      </ul>
+      <hr class="text-secondary">
+      <div class="dropdown">
+                <span class="text-white">
+                    <i class="bi bi-person-circle me-2"></i> {{ request.user.username|default:"Guest" }}
+                </span>
+      </div>
+    </nav>
+
+    <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+      {% block content %}
+      {% endblock %}
+    </main>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
