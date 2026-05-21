@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.views import generic
 
-from .models import Position, Task, TaskType, Worker
+from .models import Position, Task, Worker
 
 
 def index(request):
@@ -28,3 +28,11 @@ class TaskListView(generic.ListView):
     template_name = "manager/task_list.html"
 
     queryset = Task.objects.order_by("is_completed", "deadline")
+
+
+class WorkerListView(generic.ListView):
+    model = Worker
+    context_object_name = "worker_list"
+    template_name = "manager/worker_list.html"
+
+    queryset = Worker.objects.select_related("position")

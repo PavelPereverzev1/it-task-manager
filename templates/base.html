@@ -34,7 +34,8 @@
           </a>
         </li>
         <li>
-          <a href="#" class="nav-link">
+          <a href="{% url 'manager:worker-list' %}"
+             class="nav-link {% if request.resolver_match.url_name == 'worker-list' %}active{% endif %}">
             <i class="bi bi-people me-2"></i> Workers
           </a>
         </li>
