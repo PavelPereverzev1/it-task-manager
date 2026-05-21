@@ -45,3 +45,11 @@ class PositionListView(generic.ListView):
     template_name = "manager/position_list.html"
 
     queryset = Position.objects.annotate(workers_count=Count("workers"))
+
+
+class TaskDetailView(generic.DetailView):
+    model = Task
+    template_name = "manager/task_detail.html"
+    context_object_name = "task"
+
+    queryset = Task.objects.prefetch_related("assignees").select_related("task_type")

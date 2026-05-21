@@ -24,7 +24,10 @@
           {% for task in task_list %}
             <tr>
               <td>
-                <strong>{{ task.name }}</strong>
+                <a href="{% url 'manager:task-detail' pk=task.id %}"
+                   class="link-primary link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover fw-bold">
+                  {{ task.name }}
+                </a>
                 {% if task.description %}
                   <br><small class="text-muted">{{ task.description|truncatechars:60 }}</small>
                 {% endif %}
