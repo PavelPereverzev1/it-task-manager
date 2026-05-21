@@ -1,3 +1,4 @@
+from django.db.models import Count
 from django.shortcuts import render
 from django.views import generic
 
@@ -36,3 +37,11 @@ class WorkerListView(generic.ListView):
     template_name = "manager/worker_list.html"
 
     queryset = Worker.objects.select_related("position")
+
+
+class PositionListView(generic.ListView):
+    model = Position
+    context_object_name = "position_list"
+    template_name = "manager/position_list.html"
+
+    queryset = Position.objects.annotate(workers_count=Count("workers"))
