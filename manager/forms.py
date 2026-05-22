@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 
-from manager.models import Worker
+from manager.models import Task, Worker
 
 
 class WorkerCreationForm(UserCreationForm):
@@ -32,3 +32,38 @@ class WorkerCreationForm(UserCreationForm):
                 field.widget.attrs.update({"class": "form-check-input"})
             else:
                 field.widget.attrs.update({"class": "form-control"})
+
+
+class TaskForm(forms.ModelForm):
+    class Meta:
+        model = Task
+        # Поля, которые менеджер заполняет вручную
+        fields = [
+            "name",
+            "description",
+            "deadline",
+            "priority",
+            "task_type",
+            "assignees",
+        ]
+
+        widgets = {
+            "name": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Enter task title"}
+            ),
+            "description": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 4,
+                    "placeholder": "Describe the task...",
+                }
+            ),
+            "deadline": forms.DateInput(
+                attrs={"class": "form-control", "type": "date"}
+            ),
+            "priority": forms.Select(attrs={"class": "form-control"}),
+            "task_type": forms.Select(attrs={"class": "form-control"}),
+            "assignees": forms.CheckboxSelectMultiple(
+                attrs={"class": "task-assignees-checkboxes"}
+            ),
+        }

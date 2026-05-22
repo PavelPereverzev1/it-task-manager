@@ -95,6 +95,6 @@ AUTH_USER_MODEL = "manager.Worker"
 
 LOGIN_REDIRECT_URL = "manager:index"
 
-LOGOUT_REDIRECT_URL = "login"
+LOGOUT_REDIRECT_URL = "manager:index"
 
 MEDIA_ROOT = BASE_DIR / "media"

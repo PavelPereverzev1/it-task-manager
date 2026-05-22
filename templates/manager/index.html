@@ -65,15 +65,7 @@
     <div
         class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
       <h1 class="h2">Dashboard</h1>
-      <div class="text-secondary fw-semibold">
-        <i class="bi bi-person-circle me-1 text-primary"></i>
-        Logged in as: <span class="text-dark">@{{ user.username }}</span>
-        {% if user.is_manager %}
-          <span class="badge bg-danger ms-1">Manager</span>
-        {% else %}
-          <span class="badge bg-info text-dark ms-1">Worker</span>
-        {% endif %}
-      </div>
+     
     </div>
 
     <h3 class="h4 mb-3 text-secondary mt-4">System Statistics</h3>

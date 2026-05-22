@@ -1,10 +1,10 @@
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Count
 from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views import generic
 
-from .forms import WorkerCreationForm
+from .forms import TaskForm, WorkerCreationForm
 from .models import Position, Task, Worker
 
 
@@ -32,6 +32,16 @@ class TaskListView(LoginRequiredMixin, generic.ListView):
     template_name = "manager/task_list.html"
     queryset = Task.objects.order_by("is_completed", "deadline")
     paginate_by = 5
+
+
+class TaskCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.CreateView):
+    model = Task
+    form_class = TaskForm
+    template_name = "manager/task_form.html"
+    success_url = reverse_lazy("manager:task-list")
+
+    def test_func(self):
+        return self.request.user.is_authenticated and self.request.user.is_manager
 
 
 class WorkerListView(LoginRequiredMixin, generic.ListView):
