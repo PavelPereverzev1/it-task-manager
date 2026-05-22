@@ -21,7 +21,12 @@
       <li class="nav-item mb-1">
         <a class="nav-link {% if 'task' in request.resolver_match.url_name %}active{% endif %}"
            href="{% url 'manager:task-list' %}">
-          <i class="bi bi-clipboard-data me-2"></i> Tasks
+          <i class="bi bi-clipboard-data me-2"></i>
+          {% if user.is_manager %}
+            Tasks Created By Me
+          {% else %}
+            My Assigned Tasks
+          {% endif %}
         </a>
       </li>
 

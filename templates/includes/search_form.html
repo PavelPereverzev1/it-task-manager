@@ -1,0 +1,25 @@
+<div class="card shadow-sm border-0 mb-4 bg-light">
+  <div class="card-body py-3">
+    <form method="get" action="{% url 'manager:task-all-list' %}" class="row g-2 align-items-center">
+      <div class="col-md-8 col-lg-6">
+        <div class="input-group">
+          <span class="input-group-text bg-white border-end-0 text-muted">
+              <i class="bi bi-search"></i>
+          </span>
+          {{ search_form.search_query }}
+        </div>
+      </div>
+      <div class="col-md-4 col-lg-2">
+        <button type="submit" class="btn btn-primary btn-md fw-bold">Search</button>
+      </div>
+
+      {% if request.GET.search_query %}
+        <div class="col-md-12 mt-2">
+          <a href="{% url 'manager:task-all-list' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-x-circle me-1"></i> Clear Search
+          </a>
+        </div>
+      {% endif %}
+    </form>
+  </div>
+</div>

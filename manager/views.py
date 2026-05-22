@@ -4,7 +4,7 @@ from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views import generic
 
-from .forms import TaskForm, WorkerCreationForm
+from .forms import SearchForm, TaskForm, WorkerCreationForm
 from .models import Position, Task, Worker
 
 
@@ -26,12 +26,46 @@ def index(request):
     return render(request, "manager/index.html", context=context)
 
 
+class TaskAllListView(LoginRequiredMixin, generic.ListView):
+    model = Task
+    context_object_name = "task_list"
+    template_name = "manager/task_list.html"
+    paginate_by = 5
+
+    def get_queryset(self):
+        queryset = Task.objects.all()
+        form = SearchForm(self.request.GET)
+
+        if form.is_valid() and form.cleaned_data["search_query"]:
+            queryset = queryset.filter(
+                name__icontains=form.cleaned_data["search_query"]
+            )
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["search_form"] = SearchForm(
+            self.request.GET, placeholder_text="Search tasks by title..."
+        )
+        context["show_all_tasks"] = True
+        return context
+
+
 class TaskListView(LoginRequiredMixin, generic.ListView):
     model = Task
     context_object_name = "task_list"
     template_name = "manager/task_list.html"
-    queryset = Task.objects.order_by("is_completed", "deadline")
     paginate_by = 5
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        if self.request.user.is_manager:
+            return queryset.filter(created_by=self.request.user)
+
+        return queryset.filter(assignees=self.request.user)
 
 
 class TaskCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.CreateView):
@@ -42,6 +76,10 @@ class TaskCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.CreateView
 
     def test_func(self):
         return self.request.user.is_authenticated and self.request.user.is_manager
+
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        return super().form_valid(form)
 
 
 class WorkerListView(LoginRequiredMixin, generic.ListView):

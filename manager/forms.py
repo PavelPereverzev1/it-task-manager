@@ -37,7 +37,6 @@ class WorkerCreationForm(UserCreationForm):
 class TaskForm(forms.ModelForm):
     class Meta:
         model = Task
-        # Поля, которые менеджер заполняет вручную
         fields = [
             "name",
             "description",
@@ -67,3 +66,19 @@ class TaskForm(forms.ModelForm):
                 attrs={"class": "task-assignees-checkboxes"}
             ),
         }
+
+
+class SearchForm(forms.Form):
+    search_query = forms.CharField(
+        max_length=255,
+        required=False,
+        label="",
+        widget=forms.TextInput(attrs={"class": "form-control border-start-0 ps-0"}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        placeholder_text = kwargs.pop("placeholder_text", "Search...")
+        super().__init__(*args, **kwargs)
+        self.fields["search_query"].widget.attrs.update(
+            {"placeholder": placeholder_text}
+        )

@@ -6,6 +6,9 @@
   <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2"><i class="bi bi-list-task me-2"></i> Task List</h1>
   </div>
+  {% if show_all_tasks %}
+    {% include "includes/search_form.html" %}
+  {% endif %}
 
   <div class="card shadow-sm">
     <div class="card-body p-0">
