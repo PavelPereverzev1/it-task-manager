@@ -1,0 +1,37 @@
+<nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+  <div class="position-sticky pt-3">
+    <ul class="nav flex-column gap-2">
+      <li>
+        <a href="{% url 'manager:index' %}"
+           class="nav-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}">
+          <i class="bi bi-house-door me-2"></i> Dashboard
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'manager:task-list' %}"
+           class="nav-link {% if request.resolver_match.url_name == 'task-list' %}active{% endif %}">
+          <i class="bi bi-list-task me-2"></i> Tasks
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'manager:worker-list' %}"
+           class="nav-link {% if request.resolver_match.url_name == 'worker-list' %}active{% endif %}">
+          <i class="bi bi-people me-2"></i> Workers
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'manager:position-list' %}"
+           class="nav-link {% if request.resolver_match.url_name == 'position-list' %}active{% endif %}">
+          <i class="bi bi-briefcase me-2"></i> Positions
+        </a>
+      </li>
+
+      {% if user.is_manager %}
+        <hr class="my-2 text-secondary">
+        <div class="px-3 small text-muted text-uppercase fw-bold">Management</div>
+        <li>
+        </li>
+      {% endif %}
+    </ul>
+  </div>
+</nav>

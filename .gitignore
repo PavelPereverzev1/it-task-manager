@@ -151,3 +151,6 @@ __marimo__/
 .streamlit/secrets.toml
 
 .idea
+
+# Local mock data and tools
+manager/management/

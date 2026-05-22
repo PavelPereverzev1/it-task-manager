@@ -1,7 +1,10 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count
 from django.shortcuts import render
+from django.urls import reverse_lazy
 from django.views import generic
 
+from .forms import WorkerCreationForm
 from .models import Position, Task, Worker
 
 
@@ -23,15 +26,15 @@ def index(request):
     return render(request, "manager/index.html", context=context)
 
 
-class TaskListView(generic.ListView):
+class TaskListView(LoginRequiredMixin, generic.ListView):
     model = Task
     context_object_name = "task_list"
     template_name = "manager/task_list.html"
-
     queryset = Task.objects.order_by("is_completed", "deadline")
+    paginate_by = 5
 
 
-class WorkerListView(generic.ListView):
+class WorkerListView(LoginRequiredMixin, generic.ListView):
     model = Worker
     context_object_name = "worker_list"
     template_name = "manager/worker_list.html"
@@ -39,7 +42,15 @@ class WorkerListView(generic.ListView):
     queryset = Worker.objects.select_related("position")
 
 
-class PositionListView(generic.ListView):
+class WorkerRegisterView(generic.CreateView):
+    model = Worker
+    form_class = WorkerCreationForm
+    template_name = "registration/register.html"
+
+    success_url = reverse_lazy("login")
+
+
+class PositionListView(LoginRequiredMixin, generic.ListView):
     model = Position
     context_object_name = "position_list"
     template_name = "manager/position_list.html"
@@ -47,7 +58,7 @@ class PositionListView(generic.ListView):
     queryset = Position.objects.annotate(workers_count=Count("workers"))
 
 
-class TaskDetailView(generic.DetailView):
+class TaskDetailView(LoginRequiredMixin, generic.DetailView):
     model = Task
     template_name = "manager/task_detail.html"
     context_object_name = "task"

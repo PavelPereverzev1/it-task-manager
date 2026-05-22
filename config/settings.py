@@ -93,4 +93,8 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 AUTH_USER_MODEL = "manager.Worker"
 
+LOGIN_REDIRECT_URL = "manager:index"
+
+LOGOUT_REDIRECT_URL = "login"
+
 MEDIA_ROOT = BASE_DIR / "media"

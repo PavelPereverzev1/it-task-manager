@@ -21,6 +21,12 @@ class Worker(AbstractUser):
         related_name="workers",
     )
 
+    is_manager = models.BooleanField(
+        default=False,
+        verbose_name="Manager status",
+        help_text="Designates whether this user can create tasks and manage teams.",
+    )
+
     class Meta:
         verbose_name = "worker"
         verbose_name_plural = "workers"
