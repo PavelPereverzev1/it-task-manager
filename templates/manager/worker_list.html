@@ -38,7 +38,8 @@
                   </span>
               </td>
               <td class="text-end pe-4">
-                <a href="#" class="btn btn-sm btn-outline-primary">View Profile</a>
+                <a href="{% url 'manager:worker-detail' worker.id %}" class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-eye me-1"></i> View Profile</a>
               </td>
             </tr>
           {% empty %}

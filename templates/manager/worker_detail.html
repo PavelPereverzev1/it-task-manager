@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Profile: {{ worker.username }} - IT Task Manager{% endblock %}
+
+{% block content %}
+  <div class="pt-3 pb-2 mb-3 border-bottom">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'manager:worker-list' %}" class="text-decoration-none">Workers</a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">Worker Profile</li>
+      </ol>
+    </nav>
+    <h1 class="h2"><i class="bi bi-person-card-heading me-2"></i> @{{ worker.username }}</h1>
+  </div>
+
+  <div class="row">
+    <div class="col-md-4">
+      <div class="card shadow-sm mb-4">
+        <div class="card-body py-4">
+          <div class="text-center mb-3">
+            <div class="display-1 text-secondary">
+              <i class="bi bi-person-circle"></i>
+            </div>
+            <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill mt-2">
+          {{ worker.position.name|default:"Developer" }}
+        </span>
+          </div>
+
+          <hr>
+
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item px-0 py-2">
+              <small class="text-muted d-block">Username</small>
+              <strong class="text-dark">@{{ worker.username }}</strong>
+            </li>
+            <li class="list-group-item px-0 py-2">
+              <small class="text-muted d-block">First Name</small>
+              <span class="text-dark">{{ worker.first_name|default:"—" }}</span>
+            </li>
+            <li class="list-group-item px-0 py-2">
+              <small class="text-muted d-block">Last Name</small>
+              <span class="text-dark">{{ worker.last_name|default:"—" }}</span>
+            </li>
+            <li class="list-group-item px-0 py-2">
+              <small class="text-muted d-block">Email Address</small>
+              <a href="mailto:{{ worker.email }}" class="text-decoration-none">
+                <i class="bi bi-envelope me-1"></i> {{ worker.email|default:"No email provided" }}
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <a href="{% url 'manager:worker-list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to List
+      </a>
+    </div>
+
+    <div class="col-md-8">
+      <ul class="nav nav-tabs id=" workerTasksTab
+      " role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active fw-bold text-secondary" id="active-tab" data-bs-toggle="tab"
+                data-bs-target="#active-tasks" type="button" role="tab" aria-controls="active-tasks"
+                aria-selected="true">
+          Active Tasks <span class="badge bg-warning text-dark ms-1">{{ in_progress_tasks.count }}</span>
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link fw-bold text-secondary" id="completed-tab" data-bs-toggle="tab"
+                data-bs-target="#completed-tasks" type="button" role="tab" aria-controls="completed-tasks"
+                aria-selected="false">
+          Completed Tasks <span class="badge bg-success text-white ms-1">{{ completed_tasks.count }}</span>
+        </button>
+      </li>
+      </ul>
+
+      <div class="tab-content bg-white border border-top-0 rounded-bottom p-4 shadow-sm" id="workerTasksTabContent">
+
+        <div class="tab-pane fade show active" id="active-tasks" role="tabpanel" aria-labelledby="active-tab">
+          {% if in_progress_tasks %}
+            <div class="list-group list-group-flush">
+              {% for task in in_progress_tasks %}
+                <a href="{% url 'manager:task-detail' task.id %}"
+                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center px-0 py-3">
+                  <div>
+                    <h6 class="mb-1 fw-bold text-dark">{{ task.name }}</h6>
+                    <small class="text-muted">
+                      <i class="bi bi-calendar-event me-1"></i> Deadline: {{ task.deadline|date:"M d, Y" }}
+                    </small>
+                  </div>
+                  <span class="badge bg-warning-subtle text-warning border border-warning">In Progress</span>
+                </a>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-muted text-center py-4 mb-0">This worker has no active tasks at the moment.</p>
+          {% endif %}
+        </div>
+
+        <div class="tab-pane fade" id="completed-tasks" role="tabpanel" aria-labelledby="completed-tab">
+          {% if completed_tasks %}
+            <div class="list-group list-group-flush">
+              {% for task in completed_tasks %}
+                <a href="{% url 'manager:task-detail' task.id %}"
+                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center px-0 py-3">
+                  <div>
+                    <h6 class="mb-1 fw-bold text-secondary text-decoration-line-through">{{ task.name }}</h6>
+                    <small class="text-muted">
+                      <i class="bi bi-calendar-check me-1"></i> Finished
+                    </small>
+                  </div>
+                  <span class="badge bg-success-subtle text-success border border-success">Completed</span>
+                </a>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-muted text-center py-4 mb-0">No completed tasks found for this worker.</p>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+  </div>
+{% endblock %}

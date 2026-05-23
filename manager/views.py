@@ -76,6 +76,14 @@ class TaskListView(LoginRequiredMixin, generic.ListView):
         return queryset.filter(assignees=self.request.user)
 
 
+class TaskDetailView(LoginRequiredMixin, generic.DetailView):
+    model = Task
+    template_name = "manager/task_detail.html"
+    context_object_name = "task"
+
+    queryset = Task.objects.prefetch_related("assignees").select_related("task_type")
+
+
 class TaskCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.CreateView):
     model = Task
     form_class = TaskForm
@@ -158,6 +166,34 @@ class WorkerListView(LoginRequiredMixin, generic.ListView):
         return context
 
 
+class WorkerDetailView(LoginRequiredMixin, generic.DetailView):
+    model = Worker
+    context_object_name = "worker"
+    template_name = "manager/worker_detail.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        worker = self.get_object()
+
+        # Получаем все задачи, закрепленные за этим сотрудником
+        worker_tasks = (
+            worker.tasks.all()
+        )  # Предполагаем, что related_name="tasks" у связи assignees в модели Task
+
+        # Если related_name не задан, Django по умолчанию использует task_set:
+        # worker_tasks = worker.task_set.all()
+
+        # Делим задачи на две категории для красивого отображения в табах или списках
+        context["in_progress_tasks"] = worker_tasks.filter(is_completed=False).order_by(
+            "deadline"
+        )
+        context["completed_tasks"] = worker_tasks.filter(is_completed=True).order_by(
+            "-deadline"
+        )
+
+        return context
+
+
 class WorkerRegisterView(generic.CreateView):
     model = Worker
     form_class = WorkerCreationForm
@@ -172,11 +208,3 @@ class PositionListView(LoginRequiredMixin, generic.ListView):
     template_name = "manager/position_list.html"
 
     queryset = Position.objects.annotate(workers_count=Count("workers"))
-
-
-class TaskDetailView(LoginRequiredMixin, generic.DetailView):
-    model = Task
-    template_name = "manager/task_detail.html"
-    context_object_name = "task"
-
-    queryset = Task.objects.prefetch_related("assignees").select_related("task_type")

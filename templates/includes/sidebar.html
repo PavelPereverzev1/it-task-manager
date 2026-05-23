@@ -55,6 +55,20 @@
         </li>
       {% endif %}
 
+      <hr class="text-secondary">
+      <div class="text-muted small uppercase px-3 mb-2 fw-bold">My Account</div>
+
+      <a href="{% url 'manager:worker-detail' user.id %}"
+         class="nav-link text-white d-flex align-items-center gap-2 px-3 py-2 rounded {% if request.resolver_match.url_name == 'worker-detail' and object.id == user.id %}bg-primary{% endif %}">
+        <i class="bi bi-person-bounding-box"></i>
+        <span>My Profile</span>
+      </a>
+
+      <a href="#" class="nav-link text-white d-flex align-items-center gap-2 px-3 py-2 rounded">
+        <i class="bi bi-gear-fill"></i>
+        <span>Edit Profile</span>
+      </a>
+
       <hr class="text-secondary mx-2 my-2">
       <li class="nav-item mt-auto">
         <form action="{% url 'logout' %}" method="post" class="px-3 mt-2">
