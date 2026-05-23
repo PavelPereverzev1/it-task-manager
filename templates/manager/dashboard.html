@@ -25,10 +25,11 @@
   </div>
 
   <div class="col-md-6 col-lg-3">
-    <div class="card shadow-sm h-100 border-start border-4 border-success">
+    <div class="card shadow-sm h-100 border-start border-4 border-success position-relative">
       <div class="card-body">
         <h6 class="card-subtitle mb-2 text-muted uppercase font-weight-bold">Active Workers</h6>
         <p class="card-text fs-2 fw-bold text-dark mb-0">{{ num_workers }}</p>
+        <a href="{% url 'manager:worker-list' %}" class="stretched-link"></a>
       </div>
     </div>
   </div>

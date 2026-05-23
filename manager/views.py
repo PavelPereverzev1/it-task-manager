@@ -1,6 +1,7 @@
+from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.db.models import Count
-from django.shortcuts import redirect, render
+from django.db.models import Count, Q
+from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views import generic
 
@@ -11,6 +12,8 @@ from .forms import (
     WorkerCreationForm,
 )
 from .models import Position, Task, Worker
+
+Worker = get_user_model()
 
 
 def index(request):
@@ -129,8 +132,30 @@ class WorkerListView(LoginRequiredMixin, generic.ListView):
     model = Worker
     context_object_name = "worker_list"
     template_name = "manager/worker_list.html"
+    paginate_by = 10  # Пагинация по 10 пользователей
 
-    queryset = Worker.objects.select_related("position")
+    def get_queryset(self):
+        queryset = Worker.objects.all().order_by("username")
+        form = SearchForm(self.request.GET)
+
+        if form.is_valid() and form.cleaned_data["search_query"]:
+            query = form.cleaned_data["search_query"]
+            # Ищем совпадения по username, имени или фамилии (без учета регистра)
+            queryset = queryset.filter(
+                Q(username__icontains=query)
+                | Q(first_name__icontains=query)
+                | Q(last_name__icontains=query)
+            )
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Переиспользуем форму и динамически передаем ей новый плейсхолдер!
+        context["search_form"] = SearchForm(
+            self.request.GET, placeholder_text="Search workers by name or username..."
+        )
+        return context
 
 
 class WorkerRegisterView(generic.CreateView):

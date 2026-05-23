@@ -3,62 +3,47 @@
 {% block title %}Workers - IT Task Manager{% endblock %}
 
 {% block content %}
-  <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="bi bi-people me-2"></i> Workers Team</h1>
+  <div class="pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-people me-2"></i> Team Workers</h1>
   </div>
 
-  <div class="card shadow-sm">
+  {% include "includes/search_form.html" %}
+
+  <div class="card shadow-sm border-0">
     <div class="card-body p-0">
       <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
           <thead class="table-light">
           <tr>
-            <th>Username</th>
+            <th class="ps-4">Username</th>
             <th>Full Name</th>
             <th>Position</th>
-            <th>Email</th>
+            <th class="text-end pe-4">Actions</th>
           </tr>
           </thead>
           <tbody>
           {% for worker in worker_list %}
             <tr>
-              <td>
-                <span class="badge bg-dark-subtle text-dark font-weight-bold">
-                    <i class="bi bi-person me-1"></i> {{ worker.username }}
-                </span>
-              </td>
+              <td class="fw-semibold ps-4 text-primary">@{{ worker.username }}</td>
               <td>
                 {% if worker.first_name or worker.last_name %}
                   {{ worker.first_name }} {{ worker.last_name }}
                 {% else %}
-                  <span class="text-muted italic">Not specified</span>
+                  <span class="text-muted italic">Not provided</span>
                 {% endif %}
               </td>
               <td>
-                {% if worker.position %}
-                  <span class="text-primary font-weight-bold">
-                      <i class="bi bi-briefcase me-1"></i> {{ worker.position.name }}
+                  <span class="badge bg-secondary-subtle text-secondary border border-secondary">
+                    {{ worker.position.name|default:"Developer" }}
                   </span>
-                {% else %}
-                  <span class="text-muted">No position</span>
-                {% endif %}
               </td>
-              <td>
-                {% if worker.email %}
-                  <a href="mailto:{{ worker.email }}" class="text-decoration-none">
-                    <i class="bi bi-envelope me-1"></i> {{ worker.email }}
-                  </a>
-                {% else %}
-                  <span class="text-muted">-</span>
-                {% endif %}
+              <td class="text-end pe-4">
+                <a href="#" class="btn btn-sm btn-outline-primary">View Profile</a>
               </td>
             </tr>
           {% empty %}
             <tr>
-              <td colspan="4" class="text-center py-4 text-muted">
-                <i class="bi bi-people-fill fs-1 d-block mb-2"></i>
-                No workers found in the database.
-              </td>
+              <td colspan="4" class="text-center py-4 text-muted">No workers found.</td>
             </tr>
           {% endfor %}
           </tbody>
@@ -66,4 +51,7 @@
       </div>
     </div>
   </div>
+
+  {% include "includes/pagination.html" %}
+
 {% endblock %}
