@@ -10,8 +10,9 @@ from .forms import (
     TaskForm,
     TaskStatusUpdateForm,
     WorkerCreationForm,
+    WorkerUpdateForm,
 )
-from .models import Position, Task, Worker
+from .models import Position, Task
 
 Worker = get_user_model()
 
@@ -200,6 +201,24 @@ class WorkerRegisterView(generic.CreateView):
     template_name = "registration/register.html"
 
     success_url = reverse_lazy("login")
+
+
+class WorkerUpdateView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView):
+    model = Worker
+    form_class = WorkerUpdateForm
+    template_name = (
+        "manager/worker_form.html"  # Используем стандартное имя для форм воркера
+    )
+
+    def test_func(self):
+        # Получаем воркера, которого пытаются редактировать
+        worker = self.get_object()
+        # Проверяем: совпадает ли он с текущим залогиненным пользователем
+        return worker == self.request.user
+
+    def get_success_url(self):
+        # После успешного редактирования возвращаем пользователя в его же обновленный профиль
+        return reverse_lazy("manager:worker-detail", kwargs={"pk": self.object.pk})
 
 
 class PositionListView(LoginRequiredMixin, generic.ListView):

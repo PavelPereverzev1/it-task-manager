@@ -64,7 +64,8 @@
         <span>My Profile</span>
       </a>
 
-      <a href="#" class="nav-link text-white d-flex align-items-center gap-2 px-3 py-2 rounded">
+      <a href="{% url 'manager:worker-update' user.id %}"
+         class="nav-link text-white d-flex align-items-center gap-2 px-3 py-2 rounded {% if request.resolver_match.url_name == 'worker-update' %}bg-primary{% endif %}">
         <i class="bi bi-gear-fill"></i>
         <span>Edit Profile</span>
       </a>

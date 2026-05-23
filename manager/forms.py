@@ -1,7 +1,10 @@
 from django import forms
+from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
 
-from manager.models import Task, Worker
+from manager.models import Task
+
+Worker = get_user_model()
 
 
 class WorkerCreationForm(UserCreationForm):
@@ -32,6 +35,22 @@ class WorkerCreationForm(UserCreationForm):
                 field.widget.attrs.update({"class": "form-check-input"})
             else:
                 field.widget.attrs.update({"class": "form-control"})
+
+
+class WorkerUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Worker
+        fields = ["first_name", "last_name", "email", "position"]
+
+        # Красиво стилизуем поля под Bootstrap
+        widgets = {
+            "first_name": forms.TextInput(
+                attrs={"class": "form-select" if False else "form-control"}
+            ),
+            "last_name": forms.TextInput(attrs={"class": "form-control"}),
+            "email": forms.EmailInput(attrs={"class": "form-control"}),
+            "position": forms.Select(attrs={"class": "form-select"}),
+        }
 
 
 class TaskForm(forms.ModelForm):
