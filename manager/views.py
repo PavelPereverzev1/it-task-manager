@@ -1,10 +1,15 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Count
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views import generic
 
-from .forms import SearchForm, TaskForm, WorkerCreationForm
+from .forms import (
+    SearchForm,
+    TaskForm,
+    TaskStatusUpdateForm,
+    WorkerCreationForm,
+)
 from .models import Position, Task, Worker
 
 
@@ -80,6 +85,44 @@ class TaskCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.CreateView
     def form_valid(self, form):
         form.instance.created_by = self.request.user
         return super().form_valid(form)
+
+
+class TaskUpdateView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView):
+    model = Task
+    form_class = TaskForm  # Твоя полная форма
+    template_name = "manager/task_form.html"
+
+    def test_func(self):
+        # Доступ к полной форме имеет ТОЛЬКО создатель-менеджер
+        return self.get_object().created_by == self.request.user
+
+    def get_success_url(self):
+        return reverse_lazy("manager:task-detail", kwargs={"pk": self.object.pk})
+
+
+class TaskUpdateStatusView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView):
+    model = Task
+    form_class = TaskStatusUpdateForm
+
+    def test_func(self):
+        # Сюда пускаем только закрепленных исполнителей
+        task = self.get_object()
+        return self.request.user in task.assignees.all()
+
+    def get_success_url(self):
+        # После изменения статуса возвращаем воркера на ту же страницу деталей задачи
+        return reverse_lazy("manager:task-detail", kwargs={"pk": self.object.pk})
+
+
+class TaskDeleteView(LoginRequiredMixin, UserPassesTestMixin, generic.DeleteView):
+    model = Task
+    template_name = "manager/task_confirm_delete.html"
+    success_url = reverse_lazy("manager:task-list")
+
+    def test_func(self):
+        task = self.get_object()
+        # Удалять может ТОЛЬКО менеджер, который создал эту задачу
+        return task.created_by == self.request.user
 
 
 class WorkerListView(LoginRequiredMixin, generic.ListView):

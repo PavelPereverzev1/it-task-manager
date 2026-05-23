@@ -29,6 +29,26 @@
           </p>
         </div>
       </div>
+
+      <div class="d-flex gap-2 mb-4">
+        <a href="{% url 'manager:task-list' %}" class="btn btn-outline-secondary">
+          <i class="bi bi-arrow-left"></i> Back to List
+        </a>
+
+        {% if task.created_by == user %}
+          <a href="{% url 'manager:task-update' task.id %}" class="btn btn-primary">
+            <i class="bi bi-pencil-square me-1"></i> Update Task
+          </a>
+          <a href="{% url 'manager:task-delete' task.id %}" class="btn btn-danger">
+            <i class="bi bi-trash me-1"></i> Delete
+          </a>
+
+        {% elif user in task.assignees.all %}
+          <button type="button" class="btn btn-success fw-bold" data-bs-toggle="modal" data-bs-target="#statusModal">
+            <i class="bi bi-arrow-repeat me-1"></i> Change Status
+          </button>
+        {% endif %}
+      </div>
     </div>
 
     <div class="col-md-4">
@@ -89,10 +109,10 @@
         <div class="card-body">
           {% for worker in task.assignees.all %}
             <div class="d-flex align-items-center mb-2">
-                        <span class="badge bg-dark-subtle text-dark p-2 w-100 text-start fs-6">
-                            <i class="bi bi-person-fill me-2"></i>{{ worker.first_name }} {{ worker.last_name }} 
-                            <small class="text-muted d-block">(@{{ worker.username }})</small>
-                        </span>
+              <span class="badge bg-dark-subtle text-dark p-2 w-100 text-start fs-6">
+                  <i class="bi bi-person-fill me-2"></i>{{ worker.first_name }} {{ worker.last_name }}
+                  <small class="text-muted d-block">(@{{ worker.username }})</small>
+              </span>
             </div>
           {% empty %}
             <p class="text-muted mb-0">No one is assigned to this task yet.</p>
@@ -101,4 +121,45 @@
       </div>
     </div>
   </div>
+
+  {% if user in task.assignees.all %}
+    <div class="modal fade" id="statusModal" tabindex="-1" aria-labelledby="statusModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-dark">
+          <div class="modal-header">
+            <h5 class="modal-title" id="statusModalLabel">Update Task Status</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+
+          <form method="post" action="{% url 'manager:task-update-status' task.id %}">
+            {% csrf_token %}
+            <div class="modal-body">
+              <p class="text-muted mb-3">
+                Current state:
+                {% if task.is_completed %}
+                  <span class="badge bg-success">Completed</span>
+                {% else %}
+                  <span class="badge bg-warning text-dark">In Progress</span>
+                {% endif %}
+              </p>
+
+              <div class="mb-3">
+                <label for="id_is_completed" class="form-label fw-bold">Select New Status:</label>
+                <select name="is_completed" id="id_is_completed" class="form-select">
+                  <option value="False" {% if not task.is_completed %}selected{% endif %}>In Progress</option>
+                  <option value="True" {% if task.is_completed %}selected{% endif %}>Completed</option>
+                </select>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-success fw-bold">Save Status</button>
+            </div>
+          </form>
+
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
 {% endblock %}

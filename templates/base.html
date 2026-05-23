@@ -20,7 +20,6 @@
 
     <main
         class="{% if user.is_authenticated %}col-md-9 ms-sm-auto col-lg-10 px-md-4{% else %}col-12 px-md-5{% endif %} py-4">
-
       {% block content %}
       {% endblock %}
     </main>

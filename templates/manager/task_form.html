@@ -1,24 +1,31 @@
 {% extends "base.html" %}
 
-{% block title %}Create Task - IT Task Manager{% endblock %}
+{% block title %}
+  {% if form.instance.pk %}Update Task - IT Task Manager{% else %}Create Task - IT Task Manager{% endif %}
+{% endblock %}
 
 {% block content %}
   <div class="container" style="max-width: 800px;">
+
     <div class="card shadow-sm border-0 my-4">
       <div class="card-body p-4">
+
         <h2 class="mb-4 fw-bold text-dark">
-          <i class="bi bi-plus-circle text-primary me-2"></i>Create New Task
+          {% if form.instance.pk %}
+            <i class="bi bi-pencil-square text-primary me-2"></i>Update Task: {{ form.instance.name }}
+          {% else %}
+            <i class="bi bi-plus-circle text-primary me-2"></i>Create New Task
+          {% endif %}
         </h2>
         <hr class="mb-4">
 
         <form method="post" novalidate>
-          {% csrf_token %}
-
-          {% for field in form %}
+          {% csrf_token %} {% for field in form %}
             <div class="mb-3">
               <label class="form-label fw-semibold text-secondary" for="{{ field.id_for_label }}">
                 {{ field.label }}
               </label>
+
               {{ field }}
 
               {% if field.help_text %}
@@ -35,13 +42,16 @@
 
           <div class="d-flex gap-2 mt-4">
             <button type="submit" class="btn btn-primary px-4 fw-bold">
-              <i class="bi bi-check-lg me-1"></i> Save
+              <i class="bi bi-check-lg me-1"></i>
+              {% if form.instance.pk %}Save Changes{% else %}Save{% endif %}
             </button>
+
             <a href="{% url 'manager:task-list' %}" class="btn btn-outline-secondary px-4">
               Cancel
             </a>
           </div>
         </form>
+
       </div>
     </div>
   </div>

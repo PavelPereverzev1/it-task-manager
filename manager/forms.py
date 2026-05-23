@@ -82,3 +82,15 @@ class SearchForm(forms.Form):
         self.fields["search_query"].widget.attrs.update(
             {"placeholder": placeholder_text}
         )
+
+
+class TaskStatusUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Task
+        # Используем только реальное поле из модели
+        fields = ["is_completed"]
+
+        # Настраиваем виджет именно для поля is_completed
+        widgets = {
+            "is_completed": forms.Select(attrs={"class": "form-select"}),
+        }
