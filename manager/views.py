@@ -225,5 +225,35 @@ class PositionListView(LoginRequiredMixin, generic.ListView):
     model = Position
     context_object_name = "position_list"
     template_name = "manager/position_list.html"
+    paginate_by = 5
 
-    queryset = Position.objects.annotate(workers_count=Count("workers"))
+    def get_queryset(self):
+        # Добавляем аннотацию workers_count.
+        # Django автоматически свяжет её с твоей моделью Worker (по умолчанию через 'worker_set' или твой related_name)
+        queryset = Position.objects.annotate(
+            workers_count=Count(
+                "workers"
+            )  # Если в модели Worker поле имеет стандартный откат, пишем "worker"
+        ).order_by("name")
+
+        form = SearchForm(self.request.GET)
+
+        if form.is_valid() and form.cleaned_data["search_query"]:
+            query = form.cleaned_data["search_query"]
+            queryset = queryset.filter(name__icontains=query)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["search_form"] = SearchForm(
+            self.request.GET, placeholder_text="Search positions by name..."
+        )
+        return context
+
+
+class PositionCreateView(LoginRequiredMixin, generic.CreateView):
+    model = Position
+    fields = ["name"]
+    template_name = "manager/position_form.html"
+    success_url = reverse_lazy("manager:position-list")

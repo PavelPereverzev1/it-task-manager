@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    PositionCreateView,
     PositionListView,
     TaskAllListView,
     TaskCreateView,
@@ -34,6 +35,8 @@ urlpatterns = [
     path("workers/<int:pk>/", WorkerDetailView.as_view(), name="worker-detail"),
     path("workers/<int:pk>/update/", WorkerUpdateView.as_view(), name="worker-update"),
     path("positions/", PositionListView.as_view(), name="position-list"),
+    path("positions/", PositionListView.as_view(), name="position-list"),
+    path("positions/create/", PositionCreateView.as_view(), name="position-create"),
 ]
 
 app_name = "manager"

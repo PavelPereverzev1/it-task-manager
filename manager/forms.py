@@ -92,7 +92,7 @@ class SearchForm(forms.Form):
         max_length=255,
         required=False,
         label="",
-        widget=forms.TextInput(attrs={"class": "form-control border-start-0 ps-0"}),
+        widget=forms.TextInput(attrs={"class": "form-control"}),
     )
 
     def __init__(self, *args, **kwargs):
