@@ -82,7 +82,26 @@ class TaskDetailView(LoginRequiredMixin, generic.DetailView):
     template_name = "manager/task_detail.html"
     context_object_name = "task"
 
-    queryset = Task.objects.prefetch_related("assignees").select_related("task_type")
+    # Твой оптимизированный запрос (убирает проблему N+1 для типов задач и исполнителей)
+    queryset = Task.objects.prefetch_related("assignees").select_related(
+        "task_type", "created_by"
+    )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Получаем страницу, с которой пришел пользователь
+        referer = self.request.META.get("HTTP_REFERER")
+        default_url = reverse_lazy("manager:task-list")
+
+        # Если реферер ведет на саму себя (например, после обновления статуса через модалку),
+        # сбрасываем на дефолтный список, чтобы избежать бесконечного цикла
+        if referer and self.request.path in referer:
+            context["back_url"] = default_url
+        else:
+            context["back_url"] = referer or default_url
+
+        return context
 
 
 class TaskCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.CreateView):

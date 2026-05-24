@@ -6,7 +6,7 @@
   <div class="pt-3 pb-2 mb-3 border-bottom">
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{% url 'manager:task-list' %}" class="text-decoration-none">Tasks</a></li>
+        <li class="breadcrumb-item"><a href="{{ back_url }}" class="text-decoration-none">Tasks</a></li>
         <li class="breadcrumb-item active" aria-current="page">Task Details</li>
       </ol>
     </nav>
@@ -31,8 +31,8 @@
       </div>
 
       <div class="d-flex gap-2 mb-4">
-        <a href="{% url 'manager:task-list' %}" class="btn btn-outline-secondary">
-          <i class="bi bi-arrow-left"></i> Back to List
+        <a href="{{ back_url }}" class="btn btn-outline-secondary">
+          <i class="bi bi-arrow-left"></i> Back
         </a>
 
         {% if task.created_by == user %}
