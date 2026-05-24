@@ -1,57 +1,111 @@
-<div class="col-lg-10 mx-auto mt-4">
+<div class="w-100 text-dark d-flex align-items-center overflow-hidden"
+     style="height: calc(100vh - 56px); min-height: 500px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #e8f0fe 100%);">
 
-  <div class="p-5 mb-4 bg-light rounded-3 border text-center shadow-sm">
-    <div class="container-fluid py-5">
-      <h1 class="display-5 fw-bold text-dark"><i class="bi bi-kanban text-primary me-2"></i> IT Task Manager</h1>
-      <p class="col-md-8 mx-auto fs-5 text-secondary">
-        Welcome to our corporate platform. Manage agile projects, track tasks in real-time, and organize your
-        development teams efficiently.
-      </p>
-      <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mt-4">
-        <a href="{% url 'login' %}" class="btn btn-primary btn-lg px-4 gap-3 fw-bold">
-          <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
-        </a>
-        <a href="{% url 'manager:worker-register' %}" class="btn btn-outline-secondary btn-lg px-4 fw-bold">
-          <i class="bi bi-person-plus me-1"></i> Register
-        </a>
+  <div class="container px-4">
+
+    <div class="row align-items-center g-5 text-center text-lg-start">
+      <div class="col-lg-7">
+        <div class="d-flex align-items-center justify-content-center justify-content-lg-start mb-3">
+          <i class="bi bi-kanban text-primary fs-2 me-3"></i>
+          <span class="badge bg-primary text-white fw-bold px-3 py-2 text-uppercase tracking-wider shadow-sm">IT Task Manager</span>
+        </div>
+        <h1 class="display-5 fw-bold lh-1 mb-3">
+          Manage Projects & Tasks <br class="d-none d-md-inline">
+          <span class="text-primary">with Precision.</span>
+        </h1>
+        <p class="col-lg-10 fs-5 text-secondary mb-4">
+          Welcome to our corporate platform. Streamline your agile development workflow, track tasks in real-time,
+          organize team workers, and monitor project deadlines effectively in one centralized space.
+        </p>
+
+        <div class="d-grid gap-2 d-md-flex justify-content-md-center justify-content-lg-start mb-4 mb-lg-0">
+          <a href="{% url 'login' %}" class="btn btn-primary btn-lg px-4 me-md-2 fw-bold shadow">
+            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+          </a>
+          <a href="{% url 'manager:worker-register' %}"
+             class="btn btn-outline-primary btn-lg px-4 fw-bold shadow-sm custom-reg-btn">
+            <i class="bi bi-person-plus me-2"></i>Register
+          </a>
+        </div>
+      </div>
+
+      <div class="col-10 col-sm-8 col-lg-5 mx-auto">
+        <div class="card shadow-lg border-0 text-white p-4 rounded-4"
+             style="background: linear-gradient(145deg, #212529, #1c1f22);">
+          <div class="card-body">
+            <h5 class="fw-bold mb-3 text-warning"><i class="bi bi-lightning-charge-fill me-2"></i>Quick Features</h5>
+            <ul class="list-unstyled mb-0">
+              <li class="d-flex align-items-start mb-3">
+                <i class="bi bi-check-circle-fill text-success me-3 mt-1 fs-5"></i>
+                <div>
+                  <strong>Project Separation:</strong> Managers control assignments, workers focus on active tasks.
+                </div>
+              </li>
+              <li class="d-flex align-items-start mb-3">
+                <i class="bi bi-shield-lock-fill text-info me-3 mt-1 fs-5"></i>
+                <div>
+                  <strong>Secure Access:</strong> Context-aware task isolation ensures workspace privacy.
+                </div>
+              </li>
+              <li class="d-flex align-items-start">
+                <i class="bi bi-graph-up-arrow text-warning me-3 mt-1 fs-5"></i>
+                <div>
+                  <strong>Real-time Analytics:</strong> Keep tabs on internal workflows instantly via your main
+                  Dashboard.
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
+
+    <hr class="my-4 text-dark opacity-10">
+
+    <div class="py-2">
+      <h3 class="h5 mb-3 text-secondary text-center text-md-start fw-bold">
+        <i class="bi bi-speedometer2 text-primary me-2"></i>System Statistics
+      </h3>
+      <div class="row g-3 text-center">
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <div class="card border-0 shadow-sm border-top border-4 border-info rounded-3 bg-white">
+            <div class="card-body py-3">
+              <div class="text-muted small uppercase fw-bold mb-1" style="font-size: 0.75rem;">Total Projects</div>
+              <div class="h3 fw-bold text-dark mb-0">{{ num_projects|default:"0" }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <div class="card border-0 shadow-sm border-top border-4 border-primary rounded-3 bg-white">
+            <div class="card-body py-3">
+              <div class="text-muted small uppercase fw-bold mb-1" style="font-size: 0.75rem;">Total Tasks</div>
+              <div class="h3 fw-bold text-dark mb-0">{{ num_tasks }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <div class="card border-0 shadow-sm border-top border-4 border-success rounded-3 bg-white">
+            <div class="card-body py-3">
+              <div class="text-muted small uppercase fw-bold mb-1" style="font-size: 0.75rem;">Active Workers</div>
+              <div class="h3 fw-bold text-dark mb-0">{{ num_workers }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <div class="card border-0 shadow-sm border-top border-4 border-warning rounded-3 bg-white">
+            <div class="card-body py-3">
+              <div class="text-muted small uppercase fw-bold mb-1" style="font-size: 0.75rem;">Positions Types</div>
+              <div class="h3 fw-bold text-dark mb-0">{{ num_positions }}</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
   </div>
-
-  <h3 class="h4 mb-3 text-secondary mt-5 text-center">System Statistics</h3>
-  <div class="row g-3 mb-5 justify-content-center">
-    <div class="col-md-6 col-lg-3">
-      <div class="card shadow-sm h-100 border-start border-4 border-primary">
-        <div class="card-body">
-          <h6 class="card-subtitle mb-2 text-muted uppercase font-weight-bold">Total Tasks</h6>
-          <p class="card-text fs-2 fw-bold text-dark mb-0">{{ num_tasks }}</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-6 col-lg-3">
-      <div class="card shadow-sm h-100 border-start border-4 border-danger">
-        <div class="card-body">
-          <h6 class="card-subtitle mb-2 text-muted uppercase font-weight-bold">Critical Priority</h6>
-          <p class="card-text fs-2 fw-bold text-danger mb-0">{{ num_critical_tasks }}</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-6 col-lg-3">
-      <div class="card shadow-sm h-100 border-start border-4 border-success">
-        <div class="card-body">
-          <h6 class="card-subtitle mb-2 text-muted uppercase font-weight-bold">Active Workers</h6>
-          <p class="card-text fs-2 fw-bold text-dark mb-0">{{ num_workers }}</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-6 col-lg-3">
-      <div class="card shadow-sm h-100 border-start border-4 border-warning">
-        <div class="card-body">
-          <h6 class="card-subtitle mb-2 text-muted uppercase font-weight-bold">Positions Types</h6>
-          <p class="card-text fs-2 fw-bold text-dark mb-0">{{ num_positions }}</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
 </div>

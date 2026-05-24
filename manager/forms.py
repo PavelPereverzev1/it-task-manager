@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
 
-from manager.models import Task, TaskType
+from manager.models import Project, Task, TaskType
 
 Worker = get_user_model()
 
@@ -119,3 +119,42 @@ class TaskTypeForm(forms.ModelForm):
     class Meta:
         model = TaskType
         fields = ["name"]
+
+
+class ProjectForm(forms.ModelForm):
+    class Meta:
+        model = Project
+        fields = ["name", "description", "deadline"]
+
+        widgets = {
+            "name": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Enter project title"}
+            ),
+            "description": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 4,
+                    "placeholder": "Describe the project goals...",
+                }
+            ),
+            "deadline": forms.DateInput(
+                attrs={"class": "form-control", "type": "date"}
+            ),
+        }
+
+
+class AttachTasksForm(forms.Form):
+    tasks = forms.ModelMultipleChoiceField(
+        queryset=Task.objects.none(),
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+    )
+
+    def __init__(self, *args, **kwargs):
+        # Если в форму передали проект, мы можем вытащить его задачи для дефолтных галочек
+        project = kwargs.pop("project", None)
+        super().__init__(*args, **kwargs)
+
+        if project:
+            # Устанавливаем галочки для задач, которые уже привязаны к этому проекту
+            self.fields["tasks"].initial = project.tasks.all()
