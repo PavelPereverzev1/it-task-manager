@@ -1,14 +1,16 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Count, Q
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.urls import reverse_lazy
-from django.views import generic
+from django.views import View, generic
 
 from .forms import (
     SearchForm,
     TaskForm,
     TaskStatusUpdateForm,
+    TaskTypeForm,
     WorkerCreationForm,
     WorkerUpdateForm,
 )
@@ -276,3 +278,30 @@ class PositionCreateView(LoginRequiredMixin, generic.CreateView):
     fields = ["name"]
     template_name = "manager/position_form.html"
     success_url = reverse_lazy("manager:position-list")
+
+
+class TaskTypeCreateAjaxView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        # Строгая проверка твоего кастомного флага из модели Worker
+        return self.request.user.is_manager
+
+    def post(self, request, *args, **kwargs):
+        form = TaskTypeForm(request.POST)
+
+        if form.is_valid():
+            task_type = form.save()
+            return JsonResponse(
+                {"success": True, "id": task_type.id, "name": task_type.name},
+                status=201,
+            )
+
+        # Если валидация провалена (например, имя дублируется)
+        # Достаем саму строку ошибки из списка ошибок поля 'name'
+        error_message = form.errors.get("name", ["Invalid data"])[0]
+        return JsonResponse(
+            {
+                "success": False,
+                "error": error_message,  # Теперь это строка, её легко прочитать в JS
+            },
+            status=400,
+        )

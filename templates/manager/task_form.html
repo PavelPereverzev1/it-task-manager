@@ -20,13 +20,27 @@
         <hr class="mb-4">
 
         <form method="post" novalidate>
-          {% csrf_token %} {% for field in form %}
+          {% csrf_token %}
+
+          {% for field in form %}
             <div class="mb-3">
               <label class="form-label fw-semibold text-secondary" for="{{ field.id_for_label }}">
                 {{ field.label }}
               </label>
 
-              {{ field }}
+              {% if field.name == 'task_type' %}
+                <div class="input-group">
+                  {{ field }}
+                  {% if user.is_manager %}
+                    <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal"
+                            data-bs-target="#addTaskTypeModal">
+                      <i class="bi bi-plus-lg"></i>
+                    </button>
+                  {% endif %}
+                </div>
+              {% else %}
+                {{ field }}
+              {% endif %}
 
               {% if field.help_text %}
                 <div class="form-text small">{{ field.help_text|safe }}</div>
@@ -55,4 +69,43 @@
       </div>
     </div>
   </div>
+
+  {% if user.is_manager %}
+    <div class="modal fade" id="addTaskTypeModal" tabindex="-1" aria-labelledby="addTaskTypeModalLabel"
+         aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-dark">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold" id="addTaskTypeModalLabel">
+              <i class="bi bi-tags me-2 text-primary"></i>Add New Task Type
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div id="modal-error-block" class="alert alert-danger d-none small"></div>
+            <form id="ajax-task-type-form">
+              {% csrf_token %}
+              <div class="mb-3">
+                <label for="modal_task_type_name" class="form-label fw-semibold">Type Name</label>
+                <input type="text" id="modal_task_type_name" class="form-control"
+                       placeholder="e.g. Bugfix, Feature, Refactoring" required>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" id="save-task-type-btn" data-url="{% url 'manager:task-type-create-ajax' %}"
+                    class="btn btn-primary fw-bold">
+              Save Type
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+  {% load static %}
+  <script src="{% static 'js/task-type-ajax.js' %}"></script>
 {% endblock %}

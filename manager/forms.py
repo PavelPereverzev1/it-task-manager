@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
 
-from manager.models import Task
+from manager.models import Task, TaskType
 
 Worker = get_user_model()
 
@@ -113,3 +113,9 @@ class TaskStatusUpdateForm(forms.ModelForm):
         widgets = {
             "is_completed": forms.Select(attrs={"class": "form-select"}),
         }
+
+
+class TaskTypeForm(forms.ModelForm):
+    class Meta:
+        model = TaskType
+        fields = ["name"]
