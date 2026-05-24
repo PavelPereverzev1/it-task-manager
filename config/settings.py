@@ -23,8 +23,14 @@ INSTALLED_APPS = [
     "manager",
 ]
 
+if DEBUG:
+    INSTALLED_APPS += [
+        "debug_toolbar",
+    ]
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -98,3 +104,8 @@ LOGIN_REDIRECT_URL = "manager:index"
 LOGOUT_REDIRECT_URL = "manager:index"
 
 MEDIA_ROOT = BASE_DIR / "media"
+
+
+INTERNAL_IPS = [
+    "127.0.0.1",
+]

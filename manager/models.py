@@ -34,7 +34,7 @@ class Worker(AbstractUser):
         ordering = ["username"]
 
     def __str__(self):
-        return f"{self.username} ({self.position.name if self.position else 'No position'})"
+        return self.username
 
 
 class TaskType(models.Model):

@@ -4,15 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('manager', '0001_initial'),
+        ("manager", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='worker',
-            name='is_manager',
-            field=models.BooleanField(default=False, help_text='Designates whether this user can create tasks and manage teams.', verbose_name='Manager status'),
+            model_name="worker",
+            name="is_manager",
+            field=models.BooleanField(
+                default=False,
+                help_text="Designates whether this user can create tasks and manage teams.",
+                verbose_name="Manager status",
+            ),
         ),
     ]

@@ -114,8 +114,13 @@
       </div>
     {% else %}
       <div class="alert alert-info" role="alert">
-        <i class="bi bi-info-circle me-2"></i>This project doesn't have any tasks yet. You can create a new one or
-        attach existing tasks using the buttons above.
+        <i class="bi bi-info-circle me-2"></i>
+        {% if user.is_manager %}
+          This project doesn't have any tasks yet. You can create a new one or attach existing tasks using the buttons
+          above.
+        {% else %}
+          This project doesn't have any tasks assigned yet.
+        {% endif %}
       </div>
     {% endif %}
 

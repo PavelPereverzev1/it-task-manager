@@ -62,11 +62,6 @@ urlpatterns = [
         ProjectTaskCreateView.as_view(),
         name="project-task-create",
     ),
-    path(
-        "projects/<int:project_id>/tasks/create/",
-        ProjectTaskCreateView.as_view(),
-        name="project-task-create",
-    ),
 ]
 
 app_name = "manager"

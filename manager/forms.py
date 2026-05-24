@@ -42,15 +42,19 @@ class WorkerUpdateForm(forms.ModelForm):
         model = Worker
         fields = ["first_name", "last_name", "email", "position"]
 
-        # Красиво стилизуем поля под Bootstrap
         widgets = {
-            "first_name": forms.TextInput(
-                attrs={"class": "form-select" if False else "form-control"}
-            ),
+            "first_name": forms.TextInput(attrs={"class": "form-control"}),
             "last_name": forms.TextInput(attrs={"class": "form-control"}),
             "email": forms.EmailInput(attrs={"class": "form-control"}),
             "position": forms.Select(attrs={"class": "form-select"}),
         }
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            # Если мы редактируем существующего пользователя и он менеджер
+            if self.instance and self.instance.is_manager:
+                # Вариант А: Полностью убираем поле из формы
+                del self.fields["position"]
 
 
 class TaskForm(forms.ModelForm):
@@ -77,7 +81,7 @@ class TaskForm(forms.ModelForm):
                 }
             ),
             "deadline": forms.DateInput(
-                attrs={"class": "form-control", "type": "date"}
+                attrs={"class": "form-control", "type": "datetime-local"}
             ),
             "priority": forms.Select(attrs={"class": "form-control"}),
             "task_type": forms.Select(attrs={"class": "form-control"}),
@@ -85,6 +89,11 @@ class TaskForm(forms.ModelForm):
                 attrs={"class": "task-assignees-checkboxes"}
             ),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Делаем поле исполнителей необязательным для заполнения
+        self.fields["assignees"].required = False
 
 
 class SearchForm(forms.Form):
@@ -111,7 +120,10 @@ class TaskStatusUpdateForm(forms.ModelForm):
 
         # Настраиваем виджет именно для поля is_completed
         widgets = {
-            "is_completed": forms.Select(attrs={"class": "form-select"}),
+            "is_completed": forms.Select(
+                choices=[(False, "In Progress"), (True, "Completed")],
+                attrs={"class": "form-select"},
+            ),
         }
 
 
@@ -145,16 +157,22 @@ class ProjectForm(forms.ModelForm):
 
 class AttachTasksForm(forms.Form):
     tasks = forms.ModelMultipleChoiceField(
-        queryset=Task.objects.none(),
+        queryset=Task.objects.all(),
         widget=forms.CheckboxSelectMultiple,
         required=False,
     )
 
     def __init__(self, *args, **kwargs):
-        # Если в форму передали проект, мы можем вытащить его задачи для дефолтных галочек
         project = kwargs.pop("project", None)
+        user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
 
         if project:
-            # Устанавливаем галочки для задач, которые уже привязаны к этому проекту
             self.fields["tasks"].initial = project.tasks.all()
+
+        if user:
+            from django.db.models import Q
+
+            self.fields["tasks"].queryset = Task.objects.filter(created_by=user).filter(
+                Q(project__isnull=True) | Q(project=project)
+            )

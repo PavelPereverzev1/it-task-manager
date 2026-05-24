@@ -48,7 +48,7 @@ class TaskAllListView(LoginRequiredMixin, generic.ListView):
     paginate_by = 5
 
     def get_queryset(self):
-        queryset = Task.objects.all()
+        queryset = Task.objects.select_related("task_type", "project")
         form = SearchForm(self.request.GET)
 
         if form.is_valid() and form.cleaned_data["search_query"]:
@@ -75,11 +75,10 @@ class TaskListView(LoginRequiredMixin, generic.ListView):
     paginate_by = 5
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = Task.objects.select_related("task_type", "project")
 
         if self.request.user.is_manager:
             return queryset.filter(created_by=self.request.user)
-
         return queryset.filter(assignees=self.request.user)
 
 
@@ -100,7 +99,6 @@ class TaskDetailView(LoginRequiredMixin, generic.DetailView):
         if referer:
             referer_path = urlparse(referer).path
 
-            # Проверяем на зацикливание (если обновили статус на этой же странице)
             if self.request.path in referer_path:
                 context["back_url"] = default_url
             else:
@@ -145,10 +143,12 @@ class TaskUpdateStatusView(LoginRequiredMixin, UserPassesTestMixin, generic.Upda
     def test_func(self):
         # Сюда пускаем только закрепленных исполнителей
         task = self.get_object()
-        return self.request.user in task.assignees.all()
+        return (
+            self.request.user in task.assignees.all()
+            or task.created_by == self.request.user
+        )
 
     def get_success_url(self):
-        # После изменения статуса возвращаем воркера на ту же страницу деталей задачи
         return reverse_lazy("manager:task-detail", kwargs={"pk": self.object.pk})
 
 
@@ -170,12 +170,13 @@ class WorkerListView(LoginRequiredMixin, generic.ListView):
     paginate_by = 10  # Пагинация по 10 пользователей
 
     def get_queryset(self):
-        queryset = Worker.objects.all().order_by("username")
+        queryset = queryset = (
+            Worker.objects.select_related("position").all().order_by("username")
+        )
         form = SearchForm(self.request.GET)
 
         if form.is_valid() and form.cleaned_data["search_query"]:
             query = form.cleaned_data["search_query"]
-            # Ищем совпадения по username, имени или фамилии (без учета регистра)
             queryset = queryset.filter(
                 Q(username__icontains=query)
                 | Q(first_name__icontains=query)
@@ -202,15 +203,8 @@ class WorkerDetailView(LoginRequiredMixin, generic.DetailView):
         context = super().get_context_data(**kwargs)
         worker = self.get_object()
 
-        # Получаем все задачи, закрепленные за этим сотрудником
-        worker_tasks = (
-            worker.tasks.all()
-        )  # Предполагаем, что related_name="tasks" у связи assignees в модели Task
+        worker_tasks = worker.tasks.select_related("task_type")
 
-        # Если related_name не задан, Django по умолчанию использует task_set:
-        # worker_tasks = worker.task_set.all()
-
-        # Делим задачи на две категории для красивого отображения в табах или списках
         context["in_progress_tasks"] = worker_tasks.filter(is_completed=False).order_by(
             "deadline"
         )
@@ -254,8 +248,6 @@ class PositionListView(LoginRequiredMixin, generic.ListView):
     paginate_by = 5
 
     def get_queryset(self):
-        # Добавляем аннотацию workers_count.
-        # Django автоматически свяжет её с твоей моделью Worker (по умолчанию через 'worker_set' или твой related_name)
         queryset = Position.objects.annotate(
             workers_count=Count(
                 "workers"
@@ -287,7 +279,6 @@ class PositionCreateView(LoginRequiredMixin, generic.CreateView):
 
 class TaskTypeCreateAjaxView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self):
-        # Строгая проверка твоего кастомного флага из модели Worker
         return self.request.user.is_manager
 
     def post(self, request, *args, **kwargs):
@@ -319,7 +310,7 @@ class ProjectAllListView(LoginRequiredMixin, generic.ListView):
     paginate_by = 6
 
     def get_queryset(self):
-        queryset = Project.objects.all()
+        queryset = Project.objects.select_related("manager")
         form = SearchForm(self.request.GET)
 
         if form.is_valid() and form.cleaned_data["search_query"]:
@@ -345,9 +336,16 @@ class ProjectListView(LoginRequiredMixin, generic.ListView):
     paginate_by = 6
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        # Показываем только проекты, где текущий пользователь является менеджером
-        return queryset.filter(manager=self.request.user)
+        if self.request.user.is_manager:
+            return Project.objects.select_related("manager").filter(
+                manager=self.request.user
+            )
+            # Для исполнителей: выбираем проекты, где они участвуют в задачах
+        return (
+            Project.objects.select_related("manager")
+            .filter(tasks__assignees=self.request.user)
+            .distinct()
+        )
 
 
 class ProjectCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.CreateView):
@@ -373,7 +371,7 @@ class ProjectDetailView(LoginRequiredMixin, generic.DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Передаем в контекст все задачи, связанные с этим проектом
-        context["project_tasks"] = self.object.tasks.all()
+        context["project_tasks"] = self.object.tasks.select_related("task_type")
         return context
 
 
@@ -442,9 +440,7 @@ class ProjectTaskCreateView(
 ):
     model = Task
     form_class = TaskForm
-    template_name = (
-        "manager/task_form.html"  # Используем твой готовый шаблон формы задачи
-    )
+    template_name = "manager/task_form.html"
 
     def test_func(self):
         return self.request.user.is_manager
