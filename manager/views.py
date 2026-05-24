@@ -1,12 +1,16 @@
+from urllib.parse import urlparse
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Count, Q
 from django.http import JsonResponse
-from django.shortcuts import render
-from django.urls import reverse_lazy
+from django.shortcuts import get_object_or_404, render
+from django.urls import reverse, reverse_lazy
 from django.views import View, generic
 
 from .forms import (
+    AttachTasksForm,
+    ProjectForm,
     SearchForm,
     TaskForm,
     TaskStatusUpdateForm,
@@ -14,7 +18,7 @@ from .forms import (
     WorkerCreationForm,
     WorkerUpdateForm,
 )
-from .models import Position, Task
+from .models import Position, Project, Task
 
 Worker = get_user_model()
 
@@ -23,13 +27,13 @@ def index(request):
     """View function for the home page of the site."""
 
     num_tasks = Task.objects.count()
-    num_critical_tasks = Task.objects.filter(priority="critical").count()
+    num_projects = Project.objects.count()
     num_workers = Worker.objects.count()
     num_positions = Position.objects.count()
 
     context = {
         "num_tasks": num_tasks,
-        "num_critical_tasks": num_critical_tasks,
+        "num_projects": num_projects,
         "num_workers": num_workers,
         "num_positions": num_positions,
     }
@@ -83,8 +87,6 @@ class TaskDetailView(LoginRequiredMixin, generic.DetailView):
     model = Task
     template_name = "manager/task_detail.html"
     context_object_name = "task"
-
-    # Твой оптимизированный запрос (убирает проблему N+1 для типов задач и исполнителей)
     queryset = Task.objects.prefetch_related("assignees").select_related(
         "task_type", "created_by"
     )
@@ -92,16 +94,19 @@ class TaskDetailView(LoginRequiredMixin, generic.DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # Получаем страницу, с которой пришел пользователь
         referer = self.request.META.get("HTTP_REFERER")
         default_url = reverse_lazy("manager:task-list")
 
-        # Если реферер ведет на саму себя (например, после обновления статуса через модалку),
-        # сбрасываем на дефолтный список, чтобы избежать бесконечного цикла
-        if referer and self.request.path in referer:
-            context["back_url"] = default_url
+        if referer:
+            referer_path = urlparse(referer).path
+
+            # Проверяем на зацикливание (если обновили статус на этой же странице)
+            if self.request.path in referer_path:
+                context["back_url"] = default_url
+            else:
+                context["back_url"] = referer_path
         else:
-            context["back_url"] = referer or default_url
+            context["back_url"] = default_url
 
         return context
 
@@ -305,3 +310,153 @@ class TaskTypeCreateAjaxView(LoginRequiredMixin, UserPassesTestMixin, View):
             },
             status=400,
         )
+
+
+class ProjectAllListView(LoginRequiredMixin, generic.ListView):
+    model = Project
+    context_object_name = "project_list"
+    template_name = "manager/project_list.html"
+    paginate_by = 6
+
+    def get_queryset(self):
+        queryset = Project.objects.all()
+        form = SearchForm(self.request.GET)
+
+        if form.is_valid() and form.cleaned_data["search_query"]:
+            queryset = queryset.filter(
+                name__icontains=form.cleaned_data["search_query"]
+            )
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Кастомный плейсхолдер для поиска по проектам
+        context["search_form"] = SearchForm(
+            self.request.GET, placeholder_text="Search projects by title..."
+        )
+        context["show_all_projects"] = True  # флаг для шаблона
+        return context
+
+
+class ProjectListView(LoginRequiredMixin, generic.ListView):
+    model = Project
+    context_object_name = "project_list"
+    template_name = "manager/project_list.html"
+    paginate_by = 6
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Показываем только проекты, где текущий пользователь является менеджером
+        return queryset.filter(manager=self.request.user)
+
+
+class ProjectCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.CreateView):
+    model = Project
+    form_class = ProjectForm
+    template_name = "manager/project_form.html"
+    success_url = reverse_lazy("manager:project-list")
+
+    def test_func(self):
+        return self.request.user.is_manager
+
+    def form_valid(self, form):
+        # Автоматически назначаем текущего менеджера автором проекта
+        form.instance.manager = self.request.user
+        return super().form_valid(form)
+
+
+class ProjectDetailView(LoginRequiredMixin, generic.DetailView):
+    model = Project
+    template_name = "manager/project_detail.html"
+    context_object_name = "project"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Передаем в контекст все задачи, связанные с этим проектом
+        context["project_tasks"] = self.object.tasks.all()
+        return context
+
+
+class ProjectAttachTasksView(LoginRequiredMixin, generic.FormView):
+    form_class = AttachTasksForm
+    template_name = "manager/project_attach_tasks.html"
+
+    def get_object(self):
+        return get_object_or_404(Project, pk=self.kwargs["pk"])
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        project = self.get_object()
+        kwargs["initial"] = {
+            "tasks": project.tasks.all()  # подставь project.task_set.all(), если будет ошибка
+        }
+        return kwargs
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        project = self.get_object()
+        form.fields["tasks"].queryset = Task.objects.filter(
+            created_by=self.request.user
+        ).filter(Q(project__isnull=True) | Q(project=project))
+        return form
+
+    # --- ДОБАВЛЯЕМ ЭТОТ МЕТОД ДЛЯ СОХРАНЕНИЯ ---
+    def form_valid(self, form):
+        project = self.get_object()
+
+        # 1. Получаем список задач, которые менеджер ОТМЕТИЛ галочками
+        selected_tasks = form.cleaned_data["tasks"]
+
+        # 2. Получаем список ВСЕХ задач этого менеджера, которые В ПРИНЦИПЕ были доступны в форме
+        # (это нужно, чтобы понять, какие задачи менеджер СНЯЛ с галочки, чтобы отвязать их)
+        available_tasks = form.fields["tasks"].queryset
+
+        # 3. Для всех отмеченных задач устанавливаем этот проект
+        for task in selected_tasks:
+            task.project = project
+            task.save()
+
+        # 4. Для тех задач, с которых галочку СНЯЛИ, убираем привязку к проекту (ставим NULL)
+        # Мы ищем задачи, которые были доступны, но не попали в список выбранных
+        unselected_tasks = available_tasks.exclude(
+            id__in=[t.id for t in selected_tasks]
+        )
+        for task in unselected_tasks:
+            if task.project == project:
+                task.project = None
+                task.save()
+
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["project"] = self.get_object()
+        return context
+
+    def get_success_url(self):
+        return reverse("manager:project-detail", kwargs={"pk": self.kwargs["pk"]})
+
+
+class ProjectTaskCreateView(
+    LoginRequiredMixin, UserPassesTestMixin, generic.CreateView
+):
+    model = Task
+    form_class = TaskForm
+    template_name = (
+        "manager/task_form.html"  # Используем твой готовый шаблон формы задачи
+    )
+
+    def test_func(self):
+        return self.request.user.is_manager
+
+    def get_success_url(self):
+        return reverse(
+            "manager:project-detail", kwargs={"pk": self.kwargs["project_id"]}
+        )
+
+    def form_valid(self, form):
+        # Находим проект по ID из URL и привязываем его к задаче ДО сохранения в базу
+        project = get_object_or_404(Project, pk=self.kwargs["project_id"])
+        form.instance.project = project
+        form.instance.created_by = self.request.user
+        return super().form_valid(form)

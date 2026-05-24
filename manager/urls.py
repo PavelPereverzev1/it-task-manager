@@ -3,6 +3,12 @@ from django.urls import path
 from .views import (
     PositionCreateView,
     PositionListView,
+    ProjectAllListView,
+    ProjectAttachTasksView,
+    ProjectCreateView,
+    ProjectDetailView,
+    ProjectListView,
+    ProjectTaskCreateView,
     TaskAllListView,
     TaskCreateView,
     TaskDeleteView,
@@ -37,11 +43,30 @@ urlpatterns = [
     path("workers/<int:pk>/update/", WorkerUpdateView.as_view(), name="worker-update"),
     path("positions/", PositionListView.as_view(), name="position-list"),
     path("positions/create/", PositionCreateView.as_view(), name="position-create"),
-path(
-    "task-types/create-ajax/",
-    TaskTypeCreateAjaxView.as_view(),
-    name="task-type-create-ajax"
-),
+    path(
+        "task-types/create-ajax/",
+        TaskTypeCreateAjaxView.as_view(),
+        name="task-type-create-ajax",
+    ),
+    path("projects/", ProjectListView.as_view(), name="project-list"),
+    path("projects/all/", ProjectAllListView.as_view(), name="project-all-list"),
+    path("projects/create/", ProjectCreateView.as_view(), name="project-create"),
+    path("projects/<int:pk>/", ProjectDetailView.as_view(), name="project-detail"),
+    path(
+        "projects/<int:pk>/attach-tasks/",
+        ProjectAttachTasksView.as_view(),
+        name="project-attach-tasks",
+    ),
+    path(
+        "projects/<int:project_id>/tasks/create/",
+        ProjectTaskCreateView.as_view(),
+        name="project-task-create",
+    ),
+    path(
+        "projects/<int:project_id>/tasks/create/",
+        ProjectTaskCreateView.as_view(),
+        name="project-task-create",
+    ),
 ]
 
 app_name = "manager"

@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="container-fluid px-4">
+
+    <div
+        class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+      <div>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb mb-1">
+            <li class="breadcrumb-item"><a href="{% url 'manager:project-list' %}">Projects</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ project.name }}</li>
+          </ol>
+        </nav>
+        <h1 class="h2"><i class="bi bi-folder2-open me-2 text-info"></i>{{ project.name }}</h1>
+      </div>
+
+      {% if user.is_manager %}
+        <div class="btn-group">
+          <a href="{% url 'manager:project-task-create' project_id=project.id %}" class="btn btn-sm btn-success">
+            <i class="bi bi-plus-lg"></i> Create New Task
+          </a>
+          <a href="{% url 'manager:project-attach-tasks' pk=project.id %}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-paperclip"></i> Attach Existing Tasks
+          </a>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="row g-4 mb-4">
+      <div class="col-md-8">
+        <div class="card shadow-sm h-100">
+          <div class="card-body">
+            <h5 class="card-title text-secondary">Description</h5>
+            <p class="card-text fs-5" style="white-space: pre-line;">
+              {{ project.description|default:"No description provided for this project." }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card shadow-sm h-100 border-start border-4 border-danger">
+          <div class="card-body d-flex flex-column justify-content-between">
+            <div>
+              <h5 class="card-title text-secondary mb-3">Project Details</h5>
+              <p class="mb-2">
+                <i class="bi bi-person me-2 text-primary"></i>Creator: <strong>{{ project.manager.username }}</strong>
+              </p>
+              <p class="mb-0">
+                <i class="bi bi-calendar-x me-2 text-danger"></i>Deadline: <strong
+                  class="text-danger">{{ project.deadline|date:"M d, Y" }}</strong>
+              </p>
+            </div>
+            <div class="mt-3 pt-2 border-top">
+              <span class="fs-4 fw-bold text-dark">{{ project_tasks.count }}</span>
+              <span class="text-muted">tasks total</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="h4 mb-3 text-secondary">Project Tasks</h3>
+
+    {% if project_tasks %}
+      <div class="card shadow-sm">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark">
+            <tr>
+              <th>Task Title</th>
+              <th>Deadline</th>
+              <th>Priority</th>
+              <th>Type</th>
+              <th>Status</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for task in project_tasks %}
+              <tr>
+                <td>
+                  <a href="{% url 'manager:task-detail' pk=task.id %}" class="fw-bold text-decoration-none text-dark">
+                    {{ task.name }}
+                  </a>
+                </td>
+                <td>
+                  <span class="text-muted"><i class="bi bi-calendar3 me-1"></i>{{ task.deadline|date:"M d, Y" }}</span>
+                </td>
+                <td>
+                  <span class="badge 
+                    {% if task.priority == 'CRITICAL' %}bg-danger
+                    {% elif task.priority == 'HIGH' %}bg-warning text-dark
+                    {% elif task.priority == 'MEDIUM' %}bg-primary
+                    {% else %}bg-secondary{% endif %}">
+                    {{ task.priority }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge bg-light text-dark border">{{ task.task_type.name }}</span>
+                </td>
+                <td>
+                  {% if task.is_completed %}
+                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Completed</span>
+                  {% else %}
+                    <span class="badge bg-info text-dark"><i class="bi bi-clock me-1"></i>In Progress</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% else %}
+      <div class="alert alert-info" role="alert">
+        <i class="bi bi-info-circle me-2"></i>This project doesn't have any tasks yet. You can create a new one or
+        attach existing tasks using the buttons above.
+      </div>
+    {% endif %}
+
+  </div>
+{% endblock %}

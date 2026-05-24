@@ -47,6 +47,21 @@ class TaskType(models.Model):
         return self.name
 
 
+class Project(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    deadline = models.DateField()
+    manager = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="projects"
+    )
+
+    class Meta:
+        ordering = ["-deadline"]
+
+    def __str__(self):
+        return self.name
+
+
 class Task(models.Model):
     PRIORITY_CHOICES = [
         ("urgent", "Urgent"),
@@ -75,6 +90,9 @@ class Task(models.Model):
         blank=True,
         related_name="created_tasks",
         verbose_name="Created by",
+    )
+    project = models.ForeignKey(
+        Project, on_delete=models.CASCADE, null=True, blank=True, related_name="tasks"
     )
 
     class Meta:

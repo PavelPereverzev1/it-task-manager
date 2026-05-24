@@ -5,12 +5,13 @@
       <div class="p-2 bg-dark rounded border border-secondary">
         <div class="fw-bold text-white">{{ user.username }}</div>
         <span class="badge {% if user.is_manager %}bg-danger{% else %}bg-info text-dark{% endif %} mt-1">
-                {% if user.is_manager %}Manager{% else %}Worker{% endif %}
-            </span>
+          {% if user.is_manager %}Manager{% else %}Worker{% endif %}
+        </span>
       </div>
     </div>
 
     <ul class="nav flex-column px-2">
+
       <li class="nav-item mb-1">
         <a class="nav-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}"
            href="{% url 'manager:index' %}">
@@ -19,7 +20,15 @@
       </li>
 
       <li class="nav-item mb-1">
-        <a class="nav-link {% if 'task' in request.resolver_match.url_name %}active{% endif %}"
+        <a class="nav-link {% if request.resolver_match.url_name == 'project-list' or request.resolver_match.url_name == 'project-all-list' %}active{% endif %}"
+           href="{% url 'manager:project-list' %}">
+          <i class="bi bi-folder2-open me-2"></i>
+          {% if user.is_manager %}My Projects{% else %}Projects{% endif %}
+        </a>
+      </li>
+
+      <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'task-list' or request.resolver_match.url_name == 'task-all-list' %}active{% endif %}"
            href="{% url 'manager:task-list' %}">
           <i class="bi bi-clipboard-data me-2"></i>
           {% if user.is_manager %}
@@ -35,22 +44,16 @@
         <div class="px-3 small text-uppercase text-muted fw-bold mb-2">Management</div>
 
         <li class="nav-item mb-1">
-          <a class="nav-link text-success fw-bold" href="{% url 'manager:task-create' %}">
+          <a class="nav-link text-success fw-bold {% if request.resolver_match.url_name == 'project-create' %}active{% endif %}"
+             href="{% url 'manager:project-create' %}">
+            <i class="bi bi-folder-plus me-2 text-success"></i> Create Project
+          </a>
+        </li>
+
+        <li class="nav-item mb-1">
+          <a class="nav-link text-success fw-bold {% if request.resolver_match.url_name == 'task-create' %}active{% endif %}"
+             href="{% url 'manager:task-create' %}">
             <i class="bi bi-plus-square-fill me-2 text-success"></i> Create Task
-          </a>
-        </li>
-
-        <li class="nav-item mb-1">
-          <a class="nav-link {% if 'worker' in request.resolver_match.url_name %}active{% endif %}"
-             href="{% url 'manager:worker-list' %}">
-            <i class="bi bi-people me-2"></i> Team Workers
-          </a>
-        </li>
-
-        <li class="nav-item mb-1">
-          <a class="nav-link {% if 'position' in request.resolver_match.url_name %}active{% endif %}"
-             href="{% url 'manager:position-list' %}">
-            <i class="bi bi-briefcase me-2"></i> Positions
           </a>
         </li>
       {% endif %}

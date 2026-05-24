@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+      {% if show_all_projects %}
+        All Projects
+      {% else %}
+        My Projects
+      {% endif %}
+    </h1>
+
+    {# Кнопку создания показываем только менеджерам #}
+    {% if user.is_manager %}
+      <a href="{% url 'manager:project-create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Create New Project
+      </a>
+    {% endif %}
+  </div>
+
+  {# Блок поиска (рендерится только на странице "All Projects", где есть search_form) #}
+  {% if show_all_projects and search_form %}
+    {% include "includes/search_form.html" %}
+  {% endif %}
+
+  {# Список проектов #}
+  {% if project_list %}
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+      {% for project in project_list %}
+        <div class="col">
+          <div class="card h-100 shadow-sm border-start border-4 border-info position-relative">
+            <div class="card-body">
+              <h5 class="card-title text-dark">{{ project.name }}</h5>
+              <p class="card-text text-muted text-truncate" style="max-width: 100%;">
+                {{ project.description|default:"No description provided." }}
+              </p>
+
+              <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                <small class="text-secondary">
+                  <i class="bi bi-person"></i> Manager: <strong>{{ project.manager.username }}</strong>
+                </small>
+                <small class="badge {% if project.tasks.count > 0 %}bg-primary{% else %}bg-secondary{% endif %}">
+                  {{ project.tasks.count }} tasks
+                </small>
+              </div>
+            </div>
+            <div class="card-footer bg-transparent border-0 pb-3">
+              <small class="text-danger fw-bold">
+                <i class="bi bi-calendar-event"></i> Deadline: {{ project.deadline|date:"M d, Y" }}
+              </small>
+            </div>
+            {# Делаем карточку кликабельной, ведем на детальную страницу #}
+            <a href="{% url 'manager:project-detail' pk=project.id %}" class="stretched-link"></a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% include "includes/pagination.html" %}
+
+  {% else %}
+    <div class="alert alert-info mt-3" role="alert">
+      No projects found.
+    </div>
+  {% endif %}
+{% endblock %}
