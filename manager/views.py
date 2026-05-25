@@ -220,9 +220,7 @@ class WorkerRegisterView(generic.CreateView):
 class WorkerUpdateView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView):
     model = Worker
     form_class = WorkerUpdateForm
-    template_name = (
-        "manager/worker_form.html"
-    )
+    template_name = "manager/worker_form.html"
 
     def test_func(self):
         worker = self.get_object()
@@ -239,11 +237,9 @@ class PositionListView(LoginRequiredMixin, generic.ListView):
     paginate_by = 5
 
     def get_queryset(self):
-        queryset = Position.objects.annotate(
-            workers_count=Count(
-                "workers"
-            )
-        ).order_by("name")
+        queryset = Position.objects.annotate(workers_count=Count("workers")).order_by(
+            "name"
+        )
 
         form = SearchForm(self.request.GET)
 
@@ -431,3 +427,24 @@ class ProjectTaskCreateView(
         form.instance.project = project
         form.instance.created_by = self.request.user
         return super().form_valid(form)
+
+
+class ProjectUpdateView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView):
+    model = Project
+    form_class = ProjectForm
+    template_name = "manager/project_form.html"
+
+    def test_func(self):
+        return self.get_object().manager == self.request.user
+
+    def get_success_url(self):
+        return reverse_lazy("manager:project-detail", kwargs={"pk": self.object.pk})
+
+
+class ProjectDeleteView(LoginRequiredMixin, UserPassesTestMixin, generic.DeleteView):
+    model = Project
+    template_name = "manager/project_confirm_delete.html"
+    success_url = reverse_lazy("manager:project-list")
+
+    def test_func(self):
+        return self.get_object().manager == self.request.user

@@ -15,16 +15,16 @@
         <h1 class="h2"><i class="bi bi-folder2-open me-2 text-info"></i>{{ project.name }}</h1>
       </div>
 
-      {% if user.is_manager %}
-        <div class="btn-group">
+      <div class="btn-group">
+        {% if user.is_manager %}
           <a href="{% url 'manager:project-task-create' project_id=project.id %}" class="btn btn-sm btn-success">
             <i class="bi bi-plus-lg"></i> Create New Task
           </a>
           <a href="{% url 'manager:project-attach-tasks' pk=project.id %}" class="btn btn-sm btn-outline-primary">
             <i class="bi bi-paperclip"></i> Attach Existing Tasks
           </a>
-        </div>
-      {% endif %}
+        {% endif %}
+      </div>
     </div>
 
     <div class="row g-4 mb-4">
@@ -51,6 +51,19 @@
                 <i class="bi bi-calendar-x me-2 text-danger"></i>Deadline: <strong
                   class="text-danger">{{ project.deadline|date:"M d, Y" }}</strong>
               </p>
+
+              {% if request.user == project.manager %}
+                <div class="mt-3 pt-3 border-top d-flex gap-2">
+                  <a href="{% url 'manager:project-update' pk=project.id %}"
+                     class="btn btn-sm btn-outline-warning flex-grow-1">
+                    <i class="bi bi-pencil-square"></i> Edit Project
+                  </a>
+                  <a href="{% url 'manager:project-delete' pk=project.id %}"
+                     class="btn btn-sm btn-outline-danger flex-grow-1">
+                    <i class="bi bi-trash"></i> Delete
+                  </a>
+                </div>
+              {% endif %}
             </div>
             <div class="mt-3 pt-2 border-top">
               <span class="fs-4 fw-bold text-dark">{{ project_tasks.count }}</span>
@@ -88,12 +101,12 @@
                   <span class="text-muted"><i class="bi bi-calendar3 me-1"></i>{{ task.deadline|date:"M d, Y" }}</span>
                 </td>
                 <td>
-                  <span class="badge 
-                    {% if task.priority == 'CRITICAL' %}bg-danger
-                    {% elif task.priority == 'HIGH' %}bg-warning text-dark
-                    {% elif task.priority == 'MEDIUM' %}bg-primary
+                  <span class="badge
+                    {% if task.priority == 'urgent' %}bg-danger
+                    {% elif task.priority == 'high' %}bg-warning text-dark
+                    {% elif task.priority == 'medium' %}bg-primary
                     {% else %}bg-secondary{% endif %}">
-                    {{ task.priority }}
+                    {{ task.get_priority_display }}
                   </span>
                 </td>
                 <td>

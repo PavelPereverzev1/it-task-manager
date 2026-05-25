@@ -6,9 +6,11 @@ from .views import (
     ProjectAllListView,
     ProjectAttachTasksView,
     ProjectCreateView,
+    ProjectDeleteView,
     ProjectDetailView,
     ProjectListView,
     ProjectTaskCreateView,
+    ProjectUpdateView,
     TaskAllListView,
     TaskCreateView,
     TaskDeleteView,
@@ -62,6 +64,8 @@ urlpatterns = [
         ProjectTaskCreateView.as_view(),
         name="project-task-create",
     ),
+    path("projects/<int:pk>/update/", ProjectUpdateView.as_view(), name="project-update"),
+    path("projects/<int:pk>/delete/", ProjectDeleteView.as_view(), name="project-delete"),
 ]
 
 app_name = "manager"
