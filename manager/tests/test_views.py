@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from manager.models import Position, Task, TaskType
+from manager.models import Position, Project, Task, TaskType
 
 Worker = get_user_model()
 
@@ -152,3 +152,37 @@ class TaskTypeCreateAjaxViewTests(TestCase):
         json_data = response.json()
         self.assertFalse(json_data["success"])
         self.assertIn("error", json_data)
+
+
+class ProjectCRUDViewTests(TestCase):
+    def setUp(self):
+        self.position = Position.objects.create(name="Manager")
+        self.manager = Worker.objects.create_user(
+            username="manager1",
+            password="password",
+            is_manager=True,
+            position=self.position,
+        )
+        self.hacker = Worker.objects.create_user(
+            username="worker1",
+            password="password",
+            is_manager=False,
+            position=self.position,
+        )
+        self.project = Project.objects.create(
+            name="Testing Project", manager=self.manager, deadline="2026-12-31"
+        )
+
+    def test_foreign_user_cannot_edit_project(self):
+        self.client.login(username="worker1", password="password")
+        response = self.client.get(
+            reverse("manager:project-update", kwargs={"pk": self.project.pk})
+        )
+        self.assertEqual(response.status_code, 403)  # Forbidden
+
+    def test_creator_can_edit_project(self):
+        self.client.login(username="manager1", password="password")
+        response = self.client.get(
+            reverse("manager:project-update", kwargs={"pk": self.project.pk})
+        )
+        self.assertEqual(response.status_code, 200)
