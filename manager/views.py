@@ -358,7 +358,6 @@ class ProjectCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.CreateV
         return self.request.user.is_manager
 
     def form_valid(self, form):
-        # Автоматически назначаем текущего менеджера автором проекта
         form.instance.manager = self.request.user
         return super().form_valid(form)
 
