@@ -49,12 +49,10 @@ class WorkerUpdateForm(forms.ModelForm):
             "position": forms.Select(attrs={"class": "form-select"}),
         }
 
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            # Если мы редактируем существующего пользователя и он менеджер
-            if self.instance and self.instance.is_manager:
-                # Вариант А: Полностью убираем поле из формы
-                del self.fields["position"]
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.is_manager:
+            del self.fields["position"]
 
 
 class TaskForm(forms.ModelForm):
@@ -115,10 +113,8 @@ class SearchForm(forms.Form):
 class TaskStatusUpdateForm(forms.ModelForm):
     class Meta:
         model = Task
-        # Используем только реальное поле из модели
         fields = ["is_completed"]
 
-        # Настраиваем виджет именно для поля is_completed
         widgets = {
             "is_completed": forms.Select(
                 choices=[(False, "In Progress"), (True, "Completed")],

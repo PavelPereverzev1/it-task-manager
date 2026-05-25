@@ -24,8 +24,6 @@ Worker = get_user_model()
 
 
 def index(request):
-    """View function for the home page of the site."""
-
     num_tasks = Task.objects.count()
     num_projects = Project.objects.count()
     num_workers = Worker.objects.count()
@@ -125,11 +123,10 @@ class TaskCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.CreateView
 
 class TaskUpdateView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView):
     model = Task
-    form_class = TaskForm  # Твоя полная форма
+    form_class = TaskForm
     template_name = "manager/task_form.html"
 
     def test_func(self):
-        # Доступ к полной форме имеет ТОЛЬКО создатель-менеджер
         return self.get_object().created_by == self.request.user
 
     def get_success_url(self):
@@ -141,7 +138,6 @@ class TaskUpdateStatusView(LoginRequiredMixin, UserPassesTestMixin, generic.Upda
     form_class = TaskStatusUpdateForm
 
     def test_func(self):
-        # Сюда пускаем только закрепленных исполнителей
         task = self.get_object()
         return (
             self.request.user in task.assignees.all()
@@ -159,7 +155,6 @@ class TaskDeleteView(LoginRequiredMixin, UserPassesTestMixin, generic.DeleteView
 
     def test_func(self):
         task = self.get_object()
-        # Удалять может ТОЛЬКО менеджер, который создал эту задачу
         return task.created_by == self.request.user
 
 
@@ -187,7 +182,6 @@ class WorkerListView(LoginRequiredMixin, generic.ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Переиспользуем форму и динамически передаем ей новый плейсхолдер!
         context["search_form"] = SearchForm(
             self.request.GET, placeholder_text="Search workers by name or username..."
         )
@@ -227,17 +221,14 @@ class WorkerUpdateView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateVi
     model = Worker
     form_class = WorkerUpdateForm
     template_name = (
-        "manager/worker_form.html"  # Используем стандартное имя для форм воркера
+        "manager/worker_form.html"
     )
 
     def test_func(self):
-        # Получаем воркера, которого пытаются редактировать
         worker = self.get_object()
-        # Проверяем: совпадает ли он с текущим залогиненным пользователем
         return worker == self.request.user
 
     def get_success_url(self):
-        # После успешного редактирования возвращаем пользователя в его же обновленный профиль
         return reverse_lazy("manager:worker-detail", kwargs={"pk": self.object.pk})
 
 
@@ -251,7 +242,7 @@ class PositionListView(LoginRequiredMixin, generic.ListView):
         queryset = Position.objects.annotate(
             workers_count=Count(
                 "workers"
-            )  # Если в модели Worker поле имеет стандартный откат, пишем "worker"
+            )
         ).order_by("name")
 
         form = SearchForm(self.request.GET)
@@ -291,8 +282,6 @@ class TaskTypeCreateAjaxView(LoginRequiredMixin, UserPassesTestMixin, View):
                 status=201,
             )
 
-        # Если валидация провалена (например, имя дублируется)
-        # Достаем саму строку ошибки из списка ошибок поля 'name'
         error_message = form.errors.get("name", ["Invalid data"])[0]
         return JsonResponse(
             {
@@ -321,7 +310,6 @@ class ProjectAllListView(LoginRequiredMixin, generic.ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Кастомный плейсхолдер для поиска по проектам
         context["search_form"] = SearchForm(
             self.request.GET, placeholder_text="Search projects by title..."
         )
@@ -340,7 +328,6 @@ class ProjectListView(LoginRequiredMixin, generic.ListView):
             return Project.objects.select_related("manager").filter(
                 manager=self.request.user
             )
-            # Для исполнителей: выбираем проекты, где они участвуют в задачах
         return (
             Project.objects.select_related("manager")
             .filter(tasks__assignees=self.request.user)
@@ -369,7 +356,6 @@ class ProjectDetailView(LoginRequiredMixin, generic.DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Передаем в контекст все задачи, связанные с этим проектом
         context["project_tasks"] = self.object.tasks.select_related("task_type")
         return context
 
@@ -397,24 +383,15 @@ class ProjectAttachTasksView(LoginRequiredMixin, generic.FormView):
         ).filter(Q(project__isnull=True) | Q(project=project))
         return form
 
-    # --- ДОБАВЛЯЕМ ЭТОТ МЕТОД ДЛЯ СОХРАНЕНИЯ ---
     def form_valid(self, form):
         project = self.get_object()
-
-        # 1. Получаем список задач, которые менеджер ОТМЕТИЛ галочками
         selected_tasks = form.cleaned_data["tasks"]
-
-        # 2. Получаем список ВСЕХ задач этого менеджера, которые В ПРИНЦИПЕ были доступны в форме
-        # (это нужно, чтобы понять, какие задачи менеджер СНЯЛ с галочки, чтобы отвязать их)
         available_tasks = form.fields["tasks"].queryset
 
-        # 3. Для всех отмеченных задач устанавливаем этот проект
         for task in selected_tasks:
             task.project = project
             task.save()
 
-        # 4. Для тех задач, с которых галочку СНЯЛИ, убираем привязку к проекту (ставим NULL)
-        # Мы ищем задачи, которые были доступны, но не попали в список выбранных
         unselected_tasks = available_tasks.exclude(
             id__in=[t.id for t in selected_tasks]
         )
@@ -450,7 +427,6 @@ class ProjectTaskCreateView(
         )
 
     def form_valid(self, form):
-        # Находим проект по ID из URL и привязываем его к задаче ДО сохранения в базу
         project = get_object_or_404(Project, pk=self.kwargs["project_id"])
         form.instance.project = project
         form.instance.created_by = self.request.user
