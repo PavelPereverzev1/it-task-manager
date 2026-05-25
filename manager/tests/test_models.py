@@ -11,7 +11,6 @@ Worker = get_user_model()
 
 class TestModels(TestCase):
     def setUp(self):
-        # Создаем базовые объекты, которые понадобятся в тестах
         self.position = Position.objects.create(name="Developer")
         self.task_type = TaskType.objects.create(name="Bug")
 
@@ -30,49 +29,29 @@ class TestModels(TestCase):
             manager=self.manager_user,
         )
 
-    # =================================================================
-    # ТЕСТЫ МОДЕЛИ POSITION
-    # =================================================================
     def test_position_str(self):
-        """Проверяем, что строковое представление должности возвращает её имя."""
         self.assertEqual(str(self.position), "Developer")
 
     def test_position_name_unique(self):
-        """Проверяем, что нельзя создать две должности с одинаковым именем."""
         with self.assertRaises(IntegrityError):
             Position.objects.create(name="Developer")
 
-    # =================================================================
-    # ТЕСТЫ МОДЕЛИ WORKER
-    # =================================================================
     def test_worker_str(self):
-        """Проверяем безопасное строковое представление воркера (только username)."""
         self.assertEqual(str(self.worker_user), "worker_alice")
 
     def test_worker_profile_data(self):
-        """Проверяем корректность флагов и связей пользователя."""
         self.assertTrue(self.manager_user.is_manager)
         self.assertFalse(self.worker_user.is_manager)
         self.assertEqual(self.worker_user.position, self.position)
 
-    # =================================================================
-    # ТЕСТЫ МОДЕЛИ PROJECT
-    # =================================================================
     def test_project_str(self):
-        """Проверяем строковое представление проекта."""
         self.assertEqual(str(self.project), "Test Project")
 
     def test_project_manager_relation(self):
-        """Проверяем связь проекта с менеджером и related_name."""
         self.assertEqual(self.project.manager, self.manager_user)
-        # Проверяем обратную связь через related_name="projects"
         self.assertIn(self.project, self.manager_user.projects.all())
 
-    # =================================================================
-    # ТЕСТЫ МОДЕЛИ TASK
-    # =================================================================
     def test_task_creation_and_str(self):
-        """Проверяем создание задачи и её __str__ метод."""
         task = Task.objects.create(
             name="Fix authentication bug",
             deadline=timezone.now(),
@@ -84,7 +63,6 @@ class TestModels(TestCase):
         self.assertEqual(str(task), expected_str)
 
     def test_task_assignees_many_to_many(self):
-        """Проверяем добавление исполнителей в задачу (Many-to-Many)."""
         task = Task.objects.create(
             name="Task with team",
             deadline=timezone.now(),
@@ -92,17 +70,14 @@ class TestModels(TestCase):
         )
         task.assignees.add(self.worker_user)
 
-        # Проверяем, что исполнитель закрепился за задачей
         self.assertIn(self.worker_user, task.assignees.all())
-        # Проверяем обратную связь (related_name="tasks") из модели Worker
         self.assertIn(task, self.worker_user.tasks.all())
 
     def test_task_without_project_is_allowed(self):
-        """Проверяем, что задачу можно создать без проекта (null=True)."""
         task = Task.objects.create(
             name="Standalone Task",
             deadline=timezone.now(),
             task_type=self.task_type,
-            project=None,  # Задача сама по себе
+            project=None,
         )
         self.assertIsNone(task.project)
