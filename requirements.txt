@@ -12,6 +12,10 @@ django-debug-toolbar==6.3.0
     # via it-task-manager (pyproject.toml)
 faker==40.19.1
     # via it-task-manager (pyproject.toml)
+gunicorn==26.0.0
+    # via it-task-manager (pyproject.toml)
+packaging==26.2
+    # via gunicorn
 psycopg2-binary==2.9.12
     # via it-task-manager (pyproject.toml)
 python-dotenv==1.2.2
