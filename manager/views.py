@@ -23,20 +23,20 @@ from .models import Position, Project, Task
 Worker = get_user_model()
 
 
-def index(request):
-    num_tasks = Task.objects.count()
-    num_projects = Project.objects.count()
-    num_workers = Worker.objects.count()
-    num_positions = Position.objects.count()
+class IndexView(generic.TemplateView):
+    template_name = "manager/index.html"
 
-    context = {
-        "num_tasks": num_tasks,
-        "num_projects": num_projects,
-        "num_workers": num_workers,
-        "num_positions": num_positions,
-    }
-
-    return render(request, "manager/index.html", context=context)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            {
+                "num_tasks": Task.objects.count(),
+                "num_projects": Project.objects.count(),
+                "num_workers": Worker.objects.count(),
+                "num_positions": Position.objects.count(),
+            }
+        )
+        return context
 
 
 class TaskAllListView(LoginRequiredMixin, generic.ListView):

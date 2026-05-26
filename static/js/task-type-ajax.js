@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
-    
+
     saveBtn.addEventListener('click', function () {
         const typeNameInput = document.getElementById('modal_task_type_name');
         const typeName = typeNameInput.value.trim();
@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             })
             .catch(error => {
-                console.error('Критическая ошибка JS:', error);
+                console.error('Critical error JS:', error);
                 errorBlock.textContent = "Something went wrong. Try again.";
                 errorBlock.classList.remove('d-none');
             });

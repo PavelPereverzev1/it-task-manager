@@ -11,7 +11,7 @@ from manager.forms import (
     WorkerCreationForm,
     WorkerUpdateForm,
 )
-from manager.models import Position, Project, Task, TaskType
+from manager.models import Position, TaskType
 
 Worker = get_user_model()
 
