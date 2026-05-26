@@ -14,8 +14,13 @@
         </li>
       {% endif %}
 
-      {% for num in paginator.page_range %}
-        {% if page_obj.number == num %}
+      {# МЕНЯЕМ ТОЛЬКО ЭТОТ ЦИКЛ #}
+      {% for num in page_obj.paginator.get_elided_page_range|default:page_obj.number %}
+        {% if num == page_obj.paginator.ELLIPSIS %}
+          <li class="page-item disabled">
+            <span class="page-link">{{ num }}</span>
+          </li>
+        {% elif page_obj.number == num %}
           <li class="page-item active" aria-current="page">
             <span class="page-link">{{ num }}</span>
           </li>
