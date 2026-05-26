@@ -4,26 +4,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (!saveBtn) return;
 
-    // СЛУШАТЕЛЬ ЗАКРЫТИЯ МОДАЛЬНОГО ОКНА (ОЧИСТКА ФОРМЫ)
     if (modalEl) {
         modalEl.addEventListener('hidden.bs.modal', function () {
             const typeNameInput = document.getElementById('modal_task_type_name');
             const errorBlock = document.getElementById('modal-error-block');
 
-            // Сбрасываем текст в инпуте
             if (typeNameInput) {
                 typeNameInput.value = '';
             }
 
-            // Очищаем и скрываем блок ошибок
             if (errorBlock) {
                 errorBlock.textContent = '';
                 errorBlock.classList.add('d-none');
             }
         });
     }
-
-    // ЛОГИКА ОТПРАВКИ ФОРМЫ
+    
     saveBtn.addEventListener('click', function () {
         const typeNameInput = document.getElementById('modal_task_type_name');
         const typeName = typeNameInput.value.trim();

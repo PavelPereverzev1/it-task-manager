@@ -90,7 +90,6 @@ class TaskForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Делаем поле исполнителей необязательным для заполнения
         self.fields["assignees"].required = False
 
 

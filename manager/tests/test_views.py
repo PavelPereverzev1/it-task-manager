@@ -58,7 +58,6 @@ class TaskListViewTests(TestCase):
             task_type=self.task_type,
         )
 
-        # Назначаем воркера исполнителем
         self.task.assignees.add(self.worker)
 
     def test_manager_sees_created_tasks(self):
