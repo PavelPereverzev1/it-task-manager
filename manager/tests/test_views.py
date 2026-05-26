@@ -30,10 +30,8 @@ class IndexViewTests(TestCase):
 
 class TaskListViewTests(TestCase):
     def setUp(self):
-        # 1. Сначала создаем должность (она нужна для воркеров)
         self.position = Position.objects.create(name="Developer")
 
-        # 2. Затем создаем пользователей (чтобы менеджер существовал до создания задачи)
         self.manager = Worker.objects.create_user(
             username="manager",
             password="password",
@@ -47,10 +45,8 @@ class TaskListViewTests(TestCase):
             position=self.position,
         )
 
-        # 3. Создаем тип задачи (он обязателен для модели Task)
         self.task_type = TaskType.objects.create(name="QA")
 
-        # 4. И только теперь ОДИН РАЗ создаем задачу со всеми обязательными полями
         self.task = Task.objects.create(
             name="Test Task",
             created_by=self.manager,
