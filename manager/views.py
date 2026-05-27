@@ -1,10 +1,7 @@
 from urllib.parse import urlparse
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.mixins import (
-    LoginRequiredMixin,
-    UserPassesTestMixin,
-)
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
@@ -143,17 +140,10 @@ class TaskUpdateView(
         return reverse_lazy("manager:task-detail", kwargs={"pk": self.object.pk})
 
 
-class TaskUpdateStatusView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView):
+class TaskUpdateStatusView(LoginRequiredMixin, generic.UpdateView):
     model = Task
     form_class = TaskStatusUpdateForm
     raise_exception = True
-
-    def test_func(self):
-        task = self.get_object()
-        return (
-            self.request.user in task.assignees.all()
-            or task.created_by == self.request.user
-        )
 
     def get_success_url(self):
         return reverse_lazy("manager:task-detail", kwargs={"pk": self.object.pk})
