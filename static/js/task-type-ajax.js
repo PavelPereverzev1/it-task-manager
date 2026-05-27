@@ -51,26 +51,24 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         })
             .then(response => {
-                return response.json().then(data => {
-                    return {status: response.status, body: data};
+                return response.text().then(htmlOrText => {
+                    return {status: response.status, data: htmlOrText};
                 });
             })
             .then(res => {
                 if (res.status === 201) {
                     const selectTaskType = document.getElementById('id_task_type');
-                    const newOption = new Option(res.body.name, res.body.id, true, true);
-                    selectTaskType.add(newOption);
+
+                    selectTaskType.insertAdjacentHTML('beforeend', res.data);
 
                     typeNameInput.value = '';
-                    const modal = bootstrap.Modal.getInstance(modalEl);
-                    modal.hide();
-                } else {
-                    let textError = "Task type with this Name already exists.";
-                    if (res.body && res.body.error) {
-                        textError = res.body.error;
-                    }
 
-                    errorBlock.textContent = textError;
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) {
+                        modal.hide();
+                    }
+                } else {
+                    errorBlock.textContent = res.data;
                     errorBlock.classList.remove('d-none');
                 }
             })

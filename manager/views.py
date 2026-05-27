@@ -3,7 +3,7 @@ from urllib.parse import urlparse
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Count, Q
-from django.http import JsonResponse
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
 from django.views import View, generic
@@ -162,7 +162,7 @@ class WorkerListView(LoginRequiredMixin, generic.ListView):
     model = Worker
     context_object_name = "worker_list"
     template_name = "manager/worker_list.html"
-    paginate_by = 10  # Пагинация по 10 пользователей
+    paginate_by = 10
 
     def get_queryset(self):
         queryset = queryset = (
@@ -273,19 +273,15 @@ class TaskTypeCreateAjaxView(LoginRequiredMixin, UserPassesTestMixin, View):
 
         if form.is_valid():
             task_type = form.save()
-            return JsonResponse(
-                {"success": True, "id": task_type.id, "name": task_type.name},
+            return render(
+                request,
+                "includes/task_type_option.html",
+                {"task_type": task_type},
                 status=201,
             )
 
         error_message = form.errors.get("name", ["Invalid data"])[0]
-        return JsonResponse(
-            {
-                "success": False,
-                "error": error_message,  # Теперь это строка, её легко прочитать в JS
-            },
-            status=400,
-        )
+        return HttpResponse(error_message, status=400)
 
 
 class ProjectAllListView(LoginRequiredMixin, generic.ListView):
@@ -309,7 +305,7 @@ class ProjectAllListView(LoginRequiredMixin, generic.ListView):
         context["search_form"] = SearchForm(
             self.request.GET, placeholder_text="Search projects by title..."
         )
-        context["show_all_projects"] = True  # флаг для шаблона
+        context["show_all_projects"] = True
         return context
 
 
@@ -366,9 +362,7 @@ class ProjectAttachTasksView(LoginRequiredMixin, generic.FormView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         project = self.get_object()
-        kwargs["initial"] = {
-            "tasks": project.tasks.all()  # подставь project.task_set.all(), если будет ошибка
-        }
+        kwargs["initial"] = {"tasks": project.tasks.all()}
         return kwargs
 
     def get_form(self, form_class=None):

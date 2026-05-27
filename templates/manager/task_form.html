@@ -30,6 +30,7 @@
 
               {% if field.name == 'task_type' %}
                 <div class="input-group">
+                  {# Django автоматично згенерує тут <select id="id_task_type"> #}
                   {{ field }}
                   {% if user.is_manager %}
                     <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal"
@@ -70,6 +71,7 @@
     </div>
   </div>
 
+  {# Модалка залишається тільки для менеджерів, все вірно #}
   {% if user.is_manager %}
     <div class="modal fade" id="addTaskTypeModal" tabindex="-1" aria-labelledby="addTaskTypeModalLabel"
          aria-hidden="true">
