@@ -1,7 +1,10 @@
 from urllib.parse import urlparse
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import (
+    LoginRequiredMixin,
+    UserPassesTestMixin,
+)
 from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
@@ -18,6 +21,7 @@ from .forms import (
     WorkerCreationForm,
     WorkerUpdateForm,
 )
+from .mixins import CheckPermissionRequiredMixin, OnlyObjectOwnerRequiredMixin
 from .models import Position, Project, Task
 
 Worker = get_user_model()
@@ -107,27 +111,33 @@ class TaskDetailView(LoginRequiredMixin, generic.DetailView):
         return context
 
 
-class TaskCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.CreateView):
+class TaskCreateView(
+    LoginRequiredMixin, CheckPermissionRequiredMixin, generic.CreateView
+):
     model = Task
     form_class = TaskForm
     template_name = "manager/task_form.html"
     success_url = reverse_lazy("manager:task-list")
 
-    def test_func(self):
-        return self.request.user.is_authenticated and self.request.user.is_manager
+    permission_required = "manager.add_task"
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
         return super().form_valid(form)
 
 
-class TaskUpdateView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView):
+class TaskUpdateView(
+    LoginRequiredMixin,
+    CheckPermissionRequiredMixin,
+    OnlyObjectOwnerRequiredMixin,
+    generic.UpdateView,
+):
     model = Task
     form_class = TaskForm
     template_name = "manager/task_form.html"
 
-    def test_func(self):
-        return self.get_object().created_by == self.request.user
+    permission_required = "manager.change_task"
+    owner_field = "created_by"
 
     def get_success_url(self):
         return reverse_lazy("manager:task-detail", kwargs={"pk": self.object.pk})
@@ -136,6 +146,7 @@ class TaskUpdateView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView
 class TaskUpdateStatusView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView):
     model = Task
     form_class = TaskStatusUpdateForm
+    raise_exception = True
 
     def test_func(self):
         task = self.get_object()
@@ -148,14 +159,18 @@ class TaskUpdateStatusView(LoginRequiredMixin, UserPassesTestMixin, generic.Upda
         return reverse_lazy("manager:task-detail", kwargs={"pk": self.object.pk})
 
 
-class TaskDeleteView(LoginRequiredMixin, UserPassesTestMixin, generic.DeleteView):
+class TaskDeleteView(
+    LoginRequiredMixin,
+    CheckPermissionRequiredMixin,
+    OnlyObjectOwnerRequiredMixin,
+    generic.DeleteView,
+):
     model = Task
     template_name = "manager/task_confirm_delete.html"
     success_url = reverse_lazy("manager:task-list")
 
-    def test_func(self):
-        task = self.get_object()
-        return task.created_by == self.request.user
+    permission_required = "manager.delete_task"
+    owner_field = "created_by"
 
 
 class WorkerListView(LoginRequiredMixin, generic.ListView):
@@ -217,14 +232,14 @@ class WorkerRegisterView(generic.CreateView):
     success_url = reverse_lazy("login")
 
 
-class WorkerUpdateView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView):
+class WorkerUpdateView(
+    LoginRequiredMixin, OnlyObjectOwnerRequiredMixin, generic.UpdateView
+):
     model = Worker
     form_class = WorkerUpdateForm
     template_name = "manager/worker_form.html"
 
-    def test_func(self):
-        worker = self.get_object()
-        return worker == self.request.user
+    owner_field = "self"
 
     def get_success_url(self):
         return reverse_lazy("manager:worker-detail", kwargs={"pk": self.object.pk})
@@ -257,16 +272,19 @@ class PositionListView(LoginRequiredMixin, generic.ListView):
         return context
 
 
-class PositionCreateView(LoginRequiredMixin, generic.CreateView):
+class PositionCreateView(
+    LoginRequiredMixin, CheckPermissionRequiredMixin, generic.CreateView
+):
     model = Position
     fields = ["name"]
     template_name = "manager/position_form.html"
     success_url = reverse_lazy("manager:position-list")
 
+    permission_required = "manager.add_position"
 
-class TaskTypeCreateAjaxView(LoginRequiredMixin, UserPassesTestMixin, View):
-    def test_func(self):
-        return self.request.user.is_manager
+
+class TaskTypeCreateAjaxView(LoginRequiredMixin, CheckPermissionRequiredMixin, View):
+    permission_required = "manager.add_tasktype"
 
     def post(self, request, *args, **kwargs):
         form = TaskTypeForm(request.POST)
@@ -327,14 +345,15 @@ class ProjectListView(LoginRequiredMixin, generic.ListView):
         )
 
 
-class ProjectCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.CreateView):
+class ProjectCreateView(
+    LoginRequiredMixin, CheckPermissionRequiredMixin, generic.CreateView
+):
     model = Project
     form_class = ProjectForm
     template_name = "manager/project_form.html"
     success_url = reverse_lazy("manager:project-list")
 
-    def test_func(self):
-        return self.request.user.is_manager
+    permission_required = "manager.add_project"
 
     def form_valid(self, form):
         form.instance.manager = self.request.user
@@ -352,12 +371,22 @@ class ProjectDetailView(LoginRequiredMixin, generic.DetailView):
         return context
 
 
-class ProjectAttachTasksView(LoginRequiredMixin, generic.FormView):
+class ProjectAttachTasksView(
+    LoginRequiredMixin,
+    CheckPermissionRequiredMixin,
+    OnlyObjectOwnerRequiredMixin,
+    generic.FormView,
+):
     form_class = AttachTasksForm
     template_name = "manager/project_attach_tasks.html"
 
+    permission_required = "manager.change_project"
+    owner_field = "manager"
+
     def get_object(self):
-        return get_object_or_404(Project, pk=self.kwargs["pk"])
+        if not hasattr(self, "object"):
+            self.object = get_object_or_404(Project, pk=self.kwargs["pk"])
+        return self.object
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -402,14 +431,24 @@ class ProjectAttachTasksView(LoginRequiredMixin, generic.FormView):
 
 
 class ProjectTaskCreateView(
-    LoginRequiredMixin, UserPassesTestMixin, generic.CreateView
+    LoginRequiredMixin,
+    CheckPermissionRequiredMixin,
+    OnlyObjectOwnerRequiredMixin,
+    generic.CreateView,
 ):
     model = Task
     form_class = TaskForm
     template_name = "manager/task_form.html"
 
-    def test_func(self):
-        return self.request.user.is_manager
+    permission_required = "manager.add_task"
+    owner_field = "manager"
+
+    def get_object(self):
+        if not hasattr(self, "project_object"):
+            self.project_object = get_object_or_404(
+                Project, pk=self.kwargs["project_id"]
+            )
+        return self.project_object
 
     def get_success_url(self):
         return reverse(
@@ -417,28 +456,38 @@ class ProjectTaskCreateView(
         )
 
     def form_valid(self, form):
-        project = get_object_or_404(Project, pk=self.kwargs["project_id"])
+        project = self.get_object()
         form.instance.project = project
         form.instance.created_by = self.request.user
         return super().form_valid(form)
 
 
-class ProjectUpdateView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView):
+class ProjectUpdateView(
+    LoginRequiredMixin,
+    CheckPermissionRequiredMixin,
+    OnlyObjectOwnerRequiredMixin,
+    generic.UpdateView,
+):
     model = Project
     form_class = ProjectForm
     template_name = "manager/project_form.html"
 
-    def test_func(self):
-        return self.get_object().manager == self.request.user
+    permission_required = "manager.change_project"
+    owner_field = "manager"
 
     def get_success_url(self):
         return reverse_lazy("manager:project-detail", kwargs={"pk": self.object.pk})
 
 
-class ProjectDeleteView(LoginRequiredMixin, UserPassesTestMixin, generic.DeleteView):
+class ProjectDeleteView(
+    LoginRequiredMixin,
+    CheckPermissionRequiredMixin,
+    OnlyObjectOwnerRequiredMixin,
+    generic.DeleteView,
+):
     model = Project
     template_name = "manager/project_confirm_delete.html"
     success_url = reverse_lazy("manager:project-list")
 
-    def test_func(self):
-        return self.get_object().manager == self.request.user
+    permission_required = "manager.delete_project"
+    owner_field = "manager"

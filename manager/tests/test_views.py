@@ -1,6 +1,8 @@
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group, Permission
+from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -11,7 +13,6 @@ Worker = get_user_model()
 
 
 class BaseManagerTestCase(TestCase):
-
     def setUp(self):
         super().setUp()
         self.dev_position = Position.objects.create(name="Developer")
@@ -30,9 +31,26 @@ class BaseManagerTestCase(TestCase):
             position=self.dev_position,
         )
 
+        manager_group, _ = Group.objects.get_or_create(name="Managers")
+
+        content_type = ContentType.objects.get_for_model(TaskType)
+
+        codenames = [
+            "add_project",
+            "change_project",
+            "delete_project",
+            "add_task",
+            "change_task",
+            "delete_task",
+            "add_position",
+            "add_tasktype",
+        ]
+
+        permissions = Permission.objects.filter(codename__in=codenames)
+        manager_group.permissions.set(permissions)
+
 
 class IndexViewTests(BaseManagerTestCase):
-
     def test_index_view_returns_correct_context(self):
         self.client.login(username="manager", password="password")
         response = self.client.get(reverse("manager:index"))
@@ -45,7 +63,6 @@ class IndexViewTests(BaseManagerTestCase):
 
 
 class TaskListViewTests(BaseManagerTestCase):
-
     def setUp(self):
         super().setUp()
         self.task_type = TaskType.objects.create(name="QA")
@@ -69,7 +86,6 @@ class TaskListViewTests(BaseManagerTestCase):
 
 
 class TaskCreateViewTests(BaseManagerTestCase):
-
     def setUp(self):
         super().setUp()
         self.task_type = TaskType.objects.create(name="Bugfix")
@@ -104,31 +120,29 @@ class TaskCreateViewTests(BaseManagerTestCase):
 
 
 class TaskTypeCreateAjaxViewTests(BaseManagerTestCase):
-
     def test_ajax_create_task_type_success(self):
         self.client.login(username="manager", password="password")
         response = self.client.post(
             reverse("manager:task-type-create-ajax"),
             data={"name": "Bugfix"},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
         )
         self.assertEqual(response.status_code, 201)
-        json_data = response.json()
-        self.assertTrue(json_data["success"])
-        self.assertEqual(json_data["name"], "Bugfix")
+        self.assertTemplateUsed(response, "includes/task_type_option.html")
+        self.assertContains(response, "Bugfix", status_code=201)
 
     def test_ajax_create_task_type_invalid(self):
         self.client.login(username="manager", password="password")
         response = self.client.post(
-            reverse("manager:task-type-create-ajax"), data={"name": ""}
+            reverse("manager:task-type-create-ajax"),
+            data={"name": ""},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
         )
         self.assertEqual(response.status_code, 400)
-        json_data = response.json()
-        self.assertFalse(json_data["success"])
-        self.assertIn("error", json_data)
+        self.assertNotEqual(response.content.decode().strip(), "")
 
 
 class ProjectCRUDViewTests(BaseManagerTestCase):
-
     def setUp(self):
         super().setUp()
         self.project = Project.objects.create(
