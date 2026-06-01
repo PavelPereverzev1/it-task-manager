@@ -1,0 +1,18 @@
+<form method="get" action="{{ request.path }}" class="form-inline my-3 w-50">
+  <div class="input-group shadow-sm rounded">
+
+    {{ search_form.search_query }}
+
+    <div class="input-group-append">
+      <button class="btn btn-primary fw-bold" type="submit">
+        <i class="bi bi-search me-1"></i> Search
+      </button>
+
+      {% if request.GET.search_query %}
+        <a href="{{ request.path }}" class="btn btn-outline-danger">
+          <i class="bi bi-x-circle me-1"></i> Reset
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</form>

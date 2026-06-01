@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: it-task-manager
+    runtime: python
+    buildCommand: "./build.sh"
+    startCommand: "uv run gunicorn config.wsgi:application"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.1

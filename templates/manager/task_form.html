@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {% if form.instance.pk %}Update Task - IT Task Manager{% else %}Create Task - IT Task Manager{% endif %}
+{% endblock %}
+
+{% block content %}
+  <div class="container" style="max-width: 800px;">
+
+    <div class="card shadow-sm border-0 my-4">
+      <div class="card-body p-4">
+
+        <h2 class="mb-4 fw-bold text-dark">
+          {% if form.instance.pk %}
+            <i class="bi bi-pencil-square text-primary me-2"></i>Update Task: {{ form.instance.name }}
+          {% else %}
+            <i class="bi bi-plus-circle text-primary me-2"></i>Create New Task
+          {% endif %}
+        </h2>
+        <hr class="mb-4">
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+
+          {% for field in form %}
+            <div class="mb-3">
+              <label class="form-label fw-semibold text-secondary" for="{{ field.id_for_label }}">
+                {{ field.label }}
+              </label>
+
+              {% if field.name == 'task_type' %}
+                <div class="input-group">
+                  {# Django автоматично згенерує тут <select id="id_task_type"> #}
+                  {{ field }}
+                  {% if user.is_manager %}
+                    <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal"
+                            data-bs-target="#addTaskTypeModal">
+                      <i class="bi bi-plus-lg"></i>
+                    </button>
+                  {% endif %}
+                </div>
+              {% else %}
+                {{ field }}
+              {% endif %}
+
+              {% if field.help_text %}
+                <div class="form-text small">{{ field.help_text|safe }}</div>
+              {% endif %}
+
+              {% for error in field.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bi bi-exclamation-circle"></i> {{ error }}
+                </div>
+              {% endfor %}
+            </div>
+          {% endfor %}
+
+          <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary px-4 fw-bold">
+              <i class="bi bi-check-lg me-1"></i>
+              {% if form.instance.pk %}Save Changes{% else %}Save{% endif %}
+            </button>
+
+            <a href="{% url 'manager:task-list' %}" class="btn btn-outline-secondary px-4">
+              Cancel
+            </a>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  {# Модалка залишається тільки для менеджерів, все вірно #}
+  {% if user.is_manager %}
+    <div class="modal fade" id="addTaskTypeModal" tabindex="-1" aria-labelledby="addTaskTypeModalLabel"
+         aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-dark">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold" id="addTaskTypeModalLabel">
+              <i class="bi bi-tags me-2 text-primary"></i>Add New Task Type
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div id="modal-error-block" class="alert alert-danger d-none small"></div>
+            <form id="ajax-task-type-form">
+              {% csrf_token %}
+              <div class="mb-3">
+                <label for="modal_task_type_name" class="form-label fw-semibold">Type Name</label>
+                <input type="text" id="modal_task_type_name" class="form-control"
+                       placeholder="e.g. Bugfix, Feature, Refactoring" required>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" id="save-task-type-btn" data-url="{% url 'manager:task-type-create-ajax' %}"
+                    class="btn btn-primary fw-bold">
+              Save Type
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+  {% load static %}
+  <script src="{% static 'js/task-type-ajax.js' %}"></script>
+{% endblock %}
