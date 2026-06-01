@@ -42,8 +42,9 @@
           <a href="{% url 'manager:task-delete' task.id %}" class="btn btn-danger">
             <i class="bi bi-trash me-1"></i> Delete
           </a>
+        {% endif %}
 
-        {% elif user in task.assignees.all %}
+        {% if user in task.assignees.all or task.created_by == user %}
           <button type="button" class="btn btn-success fw-bold" data-bs-toggle="modal" data-bs-target="#statusModal">
             <i class="bi bi-arrow-repeat me-1"></i> Change Status
           </button>
@@ -122,7 +123,7 @@
     </div>
   </div>
 
-  {% if user in task.assignees.all %}
+  {% if user in task.assignees.all or task.created_by == user %}
     <div class="modal fade" id="statusModal" tabindex="-1" aria-labelledby="statusModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content text-dark">

@@ -78,8 +78,12 @@ class TaskForm(forms.ModelForm):
                     "placeholder": "Describe the task...",
                 }
             ),
-            "deadline": forms.DateInput(
-                attrs={"class": "form-control", "type": "datetime-local"}
+            "deadline": forms.DateTimeInput(
+                attrs={
+                    "type": "datetime-local",
+                    "class": "form-control",
+                    "onclick": "this.showPicker()",
+                }
             ),
             "priority": forms.Select(attrs={"class": "form-control"}),
             "task_type": forms.Select(attrs={"class": "form-control"}),
